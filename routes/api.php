@@ -7,6 +7,12 @@ use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\DoctorController;
 
 
+
+Route::prefix('v1')->group(function () {
+    Route::apiResource('doctors', DoctorController::class);
+});
+
+
 // === PUBLIC ROUTES (Bisa diakses siapa saja) ===
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -18,6 +24,13 @@ Route::get('/medicines/{id}', [MedicineController::class, 'show']);
 //doctor controler
 Route::get('/doctors', [DoctorController::class, 'index']);
 Route::get('/doctors/{id}', [DoctorController::class, 'show']);
+Route::get('/doctors', [DoctorController::class, 'index']);   // GET list
+Route::post('/doctors', [DoctorController::class, 'store']);  // CREATE
+Route::put('/doctors/{id}', [DoctorController::class, 'update']); // UPDATE FULL
+Route::delete('/doctors/{id}', [DoctorController::class, 'destroy']); // DELETE
+Route::post('/register', [AuthController::class, 'register']); // optional
+Route::post('/login', [AuthController::class, 'login']);
+
 
 
 // === PROTECTED ROUTES (Harus Login / Punya Token) ===

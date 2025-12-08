@@ -10,17 +10,20 @@ class Doctor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'specialization',
-        'experience_years',
-        'consultation_fee',
-        'is_online'
+        'name',
+        'email',
+        'phone',
+        'specialty',
+        'license_number',
+        'address',
+        'gender',
+        'birth_date',
+        'photo',
+        'active',
     ];
 
-    // Relasi: Dokter itu punya data User (Nama, No HP)
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $casts = [
+        'birth_date' => 'date',
+        'active' => 'boolean',
+    ];
 }
-
