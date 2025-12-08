@@ -9,7 +9,10 @@ class Article extends Model
     protected $fillable = [
         'title',
         'content',
-        'category',
-        'thumbnail'
+        'image',
+        'thumbnail', 
+        'category',  
+        'author',
+        'published_at'
     ];
 }

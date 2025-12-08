@@ -62,7 +62,11 @@ class DatabaseSeeder extends Seeder
             'content' => 'Lorem ipsum dolor sit amet...',
             'author' => 'Dr. Strange',
             'published_at' => now(),
-            'image' => 'https://via.placeholder.com/300'
+            'image' => 'https://via.placeholder.com/300',
+            
+            // --- TAMBAHKAN INI ---
+            'category' => 'Tips Sehat', 
+            // ---------------------
         ]);
     }
 }

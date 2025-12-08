@@ -18,6 +18,9 @@ public function up()
         $table->text('content');
         $table->string('category'); // obat / penyakit
         $table->string('thumbnail')->nullable();
+        $table->string('image')->nullable();
+        $table->string('author');
+        $table->date('published_at');
         $table->timestamps();
     });
 }
