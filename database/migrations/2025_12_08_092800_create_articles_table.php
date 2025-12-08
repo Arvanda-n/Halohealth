@@ -10,18 +10,18 @@ return new class extends Migration
      * Run the migrations.
      */
     // database/migrations/xxxx_xx_xx_create_articles_table.php
-public function up(): void
+public function up()
 {
     Schema::create('articles', function (Blueprint $table) {
         $table->id();
         $table->string('title');
         $table->text('content');
-        $table->string('image')->nullable();
-        $table->string('author');
-        $table->date('published_at');
+        $table->string('category'); // obat / penyakit
+        $table->string('thumbnail')->nullable();
         $table->timestamps();
     });
 }
+
 
     /**
      * Reverse the migrations.
