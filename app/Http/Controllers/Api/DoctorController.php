@@ -44,9 +44,7 @@ class DoctorController extends Controller
             'active' => 'nullable|boolean',
         ]);
 
-        $doctor = Doctor::create($validated);
-
-        return response()->json($doctor, Response::HTTP_CREATED);
+        return Doctor::create($validated);
     }
 
     // Update dokter
