@@ -1,0 +1,220 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: auto;
+  overflow-y: auto;
+}
+
+
+body {
+margin: 0;
+font-family: Arial, Helvetica, sans-serif;
+background-color: #f4f6f8;
+}
+
+
+/* HEADER */
+.header {
+background: #ffffff;
+padding: 14px 18px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.header-title {
+color: #008eb1;
+font-size: 22px;
+font-weight: bold;
+padding-top: 20px;
+}
+
+
+/* LOGIN */
+.login-wrapper {
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.login-card {
+width: 320px;
+background: #fff;
+padding: 24px;
+border-radius: 14px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+
+.login-card h2 {
+text-align: center;
+color: #008eb1;
+}
+
+.login-card input {
+width: 100%;
+padding: 10px;
+margin: 12px 0;
+border-radius: 8px;
+border: 1px solid #ccc;
+}
+
+
+.login-card button {
+width: 100%;
+padding: 12px;
+background: #008eb1;
+border: none;
+color: white;
+border-radius: 8px;
+font-size: 16px;
+}
+
+/* CONTENT */
+.container {
+  padding: 16px;
+  width: 100%;
+}
+
+
+/* DOCTOR CARD */
+.doctor-card {
+background: white;
+border-radius: 14px;
+padding: 16px;
+margin-bottom: 14px;
+box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+
+.doctor-name {
+font-weight: bold;
+font-size: 16px;
+}
+
+.doctor-specialist {
+font-size: 14px;
+color: #777;
+}
+
+
+.doctor-footer {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-top: 12px;
+}
+
+
+.price {
+color: #008eb1;
+font-weight: bold;
+}
+
+.btn {
+background: #008eb1;
+color: white;
+padding: 8px 14px;
+border-radius: 8px;
+border: none;
+}
+
+
+/* BOOKING */
+.booking-card {
+background: white;
+padding: 20px;
+border-radius: 14px;
+box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.banner {
+background: linear-gradient(135deg, #008eb1, #327fd7);
+color: white;
+padding: 24px;
+border-radius: 16px;
+margin: 0px;
+padding-top: 20px;
+}
+
+
+.services {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 12px;
+margin: 16px;
+}
+
+
+.service-item {
+background: white;
+padding: 14px 8px;
+border-radius: 12px;
+text-align: center;
+font-size: 14px;
+box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* FULL BACKGROUND */
+.app {
+  
+  min-height: 100vh;
+}
+
+/* ===== DESKTOP LAYOUT ===== */
+.desktop-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: #ffffff;
+  border-right: 1px solid #eee;
+  padding: 20px;
+}
+
+.sidebar-logo {
+  color: #008eb1;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 24px;
+}
+
+.sidebar-menu a {
+  display: block;
+  padding: 12px 8px;
+  color: #333;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu .active {
+  background: #e6f7ef;
+  color: #008eb1;
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex: 1;
+  background: #f4f6f8;
+}
+
+/* RESPONSIVE MOBILE */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .desktop-layout {
+    display: block;
+  }
+}
