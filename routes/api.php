@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\DoctorController;
+use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\ConsultationController;
 
 
 
@@ -30,12 +32,15 @@ Route::put('/doctors/{id}', [DoctorController::class, 'update']); // UPDATE FULL
 Route::delete('/doctors/{id}', [DoctorController::class, 'destroy']); // DELETE
 Route::post('/register', [AuthController::class, 'register']); // optional
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/categories', [CategoryController::class,'index']);
+Route::get('/categories/{id}', [CategoryController::class,'show']);
 
 
 
 // === PROTECTED ROUTES (Harus Login / Punya Token) ===
 Route::middleware('auth:sanctum')->group(function () {
-    
+     Route::post('/consultations', [ConsultationController::class,'store']);
+     Route::get('/consultations', [ConsultationController::class,'index']);
     // Cek user yang sedang login
     Route::get('/user', function (Request $request) {
         return $request->user();

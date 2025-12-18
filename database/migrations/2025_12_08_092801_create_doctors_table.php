@@ -6,22 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateDoctorsTable extends Migration
 {
-    public function up()
-    {
+    public function up(){
         Schema::create('doctors', function (Blueprint $table) {
             $table->id();
-            $table->string('name');                 // nama lengkap
-            $table->string('email')->unique()->nullable();
-            $table->string('phone')->nullable();
-            $table->string('specialty')->nullable(); // spesialisasi
-            $table->string('license_number')->unique()->nullable(); // nomor izin/praktik
-            $table->text('address')->nullable();
-            $table->enum('gender', ['male','female','other'])->nullable();
-            $table->date('birth_date')->nullable();
-            $table->string('photo')->nullable();    // path foto
-            $table->boolean('active')->default(true);
+            $table->string('name');
+            $table->string('specialist');
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
+            $table->text('profile')->nullable();
+            $table->string('photo')->nullable();
             $table->timestamps();
-        });
+    });
+
     }
 
     public function down()
