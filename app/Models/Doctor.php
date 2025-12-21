@@ -7,20 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Doctor extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'specialty',
-        'license_number',
-        'address',
-        'gender',
-        'birth_date',
-        'photo',
-        'active',
-    ];
+     protected $fillable = ['name','specialist','profile','photo','category_id'];
+    public function category() {
+        return $this->belongsTo(Category::class);
+    }
+    public function consultations() {
+        return $this->hasMany(Consultation::class);
+    }
 
     protected $casts = [
         'birth_date' => 'date',
