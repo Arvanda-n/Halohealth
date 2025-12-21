@@ -6,25 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    // database/migrations/xxxx_xx_xx_create_consultations_table.php
-public function up(): void
-{
-    Schema::create('consultations', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('patient_id')->constrained('users'); // Pasien
-        $table->foreignId('doctor_id')->constrained('doctors'); // Dokter
-        $table->enum('status', ['pending', 'active', 'completed', 'cancelled'])->default('pending');
-        $table->text('notes')->nullable(); // Catatan dokter
-        $table->timestamps();
-    });
-}
+    public function up(): void
+    {
+        Schema::create('consultations', function (Blueprint $table) {
+            $table->id();
+            
+            // 1. KITA UBAH JADI user_id (Biar cocok sama Model & Controller)
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); 
+            
+            $table->foreignId('doctor_id')->constrained('doctors')->onDelete('cascade');
+            
+            // 2. TAMBAHAN KOLOM PENTING (Biar bisa Chat)
+            $table->text('question'); // Pasien nanya apa
+            $table->text('answer')->nullable(); // Dokter jawab apa (awalnya kosong)
+            
+            // Status & Notes
+            $table->enum('status', ['pending', 'answered', 'cancelled'])->default('pending');
+            $table->timestamps();
+        });
+    }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('consultations');
