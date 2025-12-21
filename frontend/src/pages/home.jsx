@@ -4,14 +4,55 @@ import DoctorCard from '../components/DoctorCard'
 import Sidebar from '../components/sidebar'
 import foto1 from "../assets/foto1.png";
 import foto2 from "../assets/foto2.png";
+import chatIcon from "../assets/icons/chat.png";
+import tokoIcon from "../assets/icons/toko.png";
+import homecareIcon from "../assets/icons/homecare.png";
+import asuransiIcon from "../assets/icons/asuransi.png";
+import skinIcon from "../assets/icons/haloskin.png";
+import fitIcon from "../assets/icons/halofit.png";
+
 
 
 export default function Home() {
   const doctors = [
     { id: 1, name: 'Dr. Andi', specialist: 'Dokter Umum', price: '25.000' },
     { id: 2, name: 'Dr. Sinta', specialist: 'Dokter Anak', price: '35.000' },
-    
   ]
+
+    const supports = [
+  {
+    icon: chatIcon,
+    title: "Chat dengan Dokter",
+    desc: "Lebih dari 50 spesialis tersedia 24 jam",
+  },
+  {
+    icon: tokoIcon,
+    title: "Toko Kesehatan",
+    desc: "100% produk asli, 1 jam sampai",
+  },
+  {
+    icon: homecareIcon,
+    title: "Homecare",
+    desc: "Tes lab, vaksin & dokter ke rumah",
+  },
+  {
+    icon: asuransiIcon,
+    title: "Asuransiku",
+    desc: "Bayar menggunakan asuransimu",
+  },
+  {
+    icon: skinIcon,
+    title: "Haloskin",
+    desc: "Perawatan kulit berbasis medis",
+  },
+  {
+    icon: fitIcon,
+    title: "Halofit",
+    desc: "Program tubuh fit klinis",
+  },
+];
+
+  
 
   return (
     <div className="desktop-layout">
@@ -49,15 +90,26 @@ export default function Home() {
 <section className="support-section">
   <h3>Dukungan untuk Berbagai Kebutuhan</h3>
   <div className="support-grid">
-    {Array.from({ length: 12 }).map((_, i) => (
+    {Array.from({ length: 0 }).map((_, i) => (
       <div key={i} className="support-item">ICON</div>
     ))}
   </div>
 </section>
 
+<div className="support-grid">
+  {supports.map((item, i) => (
+    <div key={i} className="support-card">
+      <img src={item.icon} alt={item.title} />
 
+      <div className="support-text">
+        <h4>{item.title}</h4>
+        <p>{item.desc}</p>
+      </div>
 
-
+      <span className="arrow">›</span>
+    </div>
+  ))}
+</div>
 
 
         {/* Menu Layanan */}
@@ -72,5 +124,7 @@ export default function Home() {
         </div>
       </div>
     </div>
+   
+   
   )
 }

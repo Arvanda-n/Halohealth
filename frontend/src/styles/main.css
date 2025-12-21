@@ -308,3 +308,44 @@ box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   height: 220px;
 }
 
+/* card icon yang dibawah */
+.support-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid #e6d4f3;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.support-card img {
+  width: 44px;
+  height: 44px;
+}
+
+.support-text h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.support-text p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.arrow {
+  margin-left: auto;
+  font-size: 24px;
+  color: #e6007a;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 👈 3 kotak per baris */
+  gap: 20px;
+}
+
+
