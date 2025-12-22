@@ -2,8 +2,9 @@ import Header from '../components/header'
 import ServiceMenu from '../components/servicemenu'
 import DoctorCard from '../components/DoctorCard'
 import Sidebar from '../components/sidebar'
-import foto1 from "../assets/foto1.png";
+import foto1 from "../assets/foto3.png";
 import foto2 from "../assets/foto2.png";
+import foto3 from "../assets/foto4.png";
 import chatIcon from "../assets/icons/chat.png";
 import tokoIcon from "../assets/icons/toko.png";
 import homecareIcon from "../assets/icons/homecare.png";
@@ -75,6 +76,7 @@ export default function Home() {
 <section className="photo-section"> 
   <img src={foto1} className="photo big" alt="foto 1" />
   <img src={foto2} className="photo small" alt="foto 2" />
+  <img src={foto3} className="photo big" alt="foto 3" />
 </section>
 
 

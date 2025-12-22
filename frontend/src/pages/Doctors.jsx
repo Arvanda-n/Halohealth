@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Biar bisa diklik ke detail
 import Header from '../components/header';
 import '../App.css'; 
 
 export default function Doctors() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [doctorsList, setDoctorsList] = useState([]); // Ubah jadi State kosong
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   
-  // DATA KATEGORI (Sesuai gambar referensi kamu)
+  // 1. DATA KATEGORI (TETAP SAMA)
   const categories = [
     { name: 'Dokter Umum', icon: '👨‍⚕️' },
     { name: 'Spesialis Anak', icon: '👶' },
@@ -19,12 +23,32 @@ export default function Doctors() {
     { name: 'Spesialis Mata', icon: '👁️' },
   ];
 
-  // DATA DOKTER DUMMY (Akan muncul di bawah)
-  const doctorsList = [
-    { id: 1, name: "dr. Budi Santoso", sp: "Dokter Umum", price: "Rp 35.000", image: "👨‍⚕️", rating: "4.8" },
-    { id: 2, name: "dr. Siti Aminah", sp: "Spesialis Anak", price: "Rp 50.000", image: "👩‍⚕️", rating: "4.9" },
-    { id: 3, name: "dr. Tirta KW", sp: "Spesialis Kulit", price: "Rp 75.000", image: "👨‍⚕️", rating: "5.0" },
-  ];
+  // 2. AMBIL DATA DARI BACKEND TEMANMU
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/doctors');
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            setDoctorsList(data);
+        } else if (data.data) {
+            setDoctorsList(data.data);
+        }
+      } catch (error) {
+        console.error("Gagal ambil data dokter:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
+
+  // 3. FILTER PENCARIAN
+  const filteredDoctors = doctorsList.filter(doc => 
+    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (doc.specialist && doc.specialist.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div style={{ background: '#fff', minHeight: '100vh' }}>
@@ -32,23 +56,16 @@ export default function Doctors() {
 
       <div className="container" style={{ padding: '40px 20px', display: 'flex', flexWrap: 'wrap', gap: '50px' }}>
         
-        {/* BAGIAN KIRI: PROMOSI (Sesuai Gambar) */}
+        {/* BAGIAN KIRI: PROMOSI (TETAP SAMA) */}
         <div style={{ flex: '1', minWidth: '300px' }}>
-            <h2 style={{ color: '#be123c', fontSize: '24px', marginBottom: '10px' }}>Chat Dokter di HaloHealth</h2>
-            <p style={{ color: '#666', lineHeight: '1.6' }}>
+            <h2 style={{ color: '#0ea5e9', fontSize: '24px', marginBottom: '10px' }}>Chat Dokter di HaloHealth</h2>
+            <p style={{ color: '#64748b', lineHeight: '1.6' }}>
                 Layanan telemedisin yang siap siaga untuk bantu kamu hidup lebih sehat.
             </p>
             
-            {/* Ilustrasi Kartun (Placeholder) */}
             <div style={{ 
-                margin: '30px 0', 
-                height: '200px', 
-                background: '#f0f9ff', 
-                borderRadius: '20px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                fontSize: '80px'
+                margin: '30px 0', height: '200px', background: '#f0f9ff', borderRadius: '20px', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '80px'
             }}>
                 👨‍⚕️👩‍⚕️🩺
             </div>
@@ -69,10 +86,10 @@ export default function Doctors() {
             </div>
         </div>
 
-        {/* BAGIAN KANAN: MENU SPESIALIS (GRID) */}
+        {/* BAGIAN KANAN: MENU & GRID DOKTER (DARI DATABASE) */}
         <div style={{ flex: '2', minWidth: '350px' }}>
             
-            {/* Search Bar Panjang */}
+            {/* Search Bar */}
             <div style={{ marginBottom: '30px' }}>
                 <input 
                     type="text" 
@@ -80,50 +97,26 @@ export default function Doctors() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
-                        width: '100%',
-                        padding: '15px 20px',
-                        borderRadius: '8px',
-                        border: '1px solid #ddd',
-                        background: '#f8fafc',
-                        fontSize: '16px',
-                        outline: 'none'
+                        width: '100%', padding: '15px 20px', borderRadius: '8px',
+                        border: '1px solid #ddd', background: '#f8fafc', fontSize: '16px', outline: 'none'
                     }}
                 />
             </div>
 
             <h3 style={{ color: '#333', marginBottom: '20px' }}>Cari Dokter atau Spesialisasi</h3>
 
-            {/* Grid Icon Bulat-Bulat */}
-            <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', 
-                gap: '20px',
-                textAlign: 'center'
-            }}>
+            {/* Grid Kategori */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '20px', textAlign: 'center' }}>
                 {categories.map((cat, index) => (
                     <div key={index} className="category-item" style={{ cursor: 'pointer' }}>
                         <div style={{ 
-                            width: '70px', 
-                            height: '70px', 
-                            background: 'white', 
-                            borderRadius: '50%', 
-                            border: '1px solid #e2e8f0',
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            fontSize: '30px',
-                            margin: '0 auto 10px auto',
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                            width: '70px', height: '70px', background: 'white', borderRadius: '50%', 
+                            border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '30px', margin: '0 auto 10px auto', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
                             transition: 'all 0.3s'
                         }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = '#0ea5e9';
-                            e.currentTarget.style.transform = 'scale(1.05)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = '#e2e8f0';
-                            e.currentTarget.style.transform = 'scale(1)';
-                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.transform = 'scale(1)'; }}
                         >
                             {cat.icon}
                         </div>
@@ -132,39 +125,49 @@ export default function Doctors() {
                 ))}
             </div>
 
-            {/* List Dokter (Opsional: Muncul di bawah kategori) */}
+            {/* List Dokter (DATA ASLI DATABASE) */}
             <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '30px' }}>
                 <h3 style={{ marginBottom: '20px' }}>Rekomendasi Dokter</h3>
-                <div style={{ display: 'grid', gap: '15px' }}>
-                    {doctorsList.map(doc => (
-                        <div key={doc.id} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '15px',
-                            padding: '15px',
-                            border: '1px solid #f1f5f9',
-                            borderRadius: '10px',
-                            background: 'white'
-                        }}>
-                            <div style={{ fontSize: '30px', background: '#e0f2fe', width: '50px', height: '50px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                {doc.image}
+                
+                {loading ? <p>Sedang memuat data...</p> : (
+                    <div style={{ display: 'grid', gap: '15px' }}>
+                        {filteredDoctors.length > 0 ? filteredDoctors.map(doc => (
+                            <div key={doc.id} style={{
+                                display: 'flex', alignItems: 'center', gap: '15px', padding: '15px',
+                                border: '1px solid #f1f5f9', borderRadius: '10px', background: 'white',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
+                            }}>
+                                {/* Foto Dokter (Handle kalau null) */}
+                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', background: '#e0f2fe' }}>
+                                     <img 
+                                        src={doc.image || "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"} 
+                                        alt={doc.name}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        onError={(e) => {e.target.src = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"}}
+                                     />
+                                </div>
+                                
+                                <div style={{ flex: 1 }}>
+                                    <h4 style={{ margin: 0, fontSize: '16px', color: '#0f172a' }}>{doc.name}</h4>
+                                    <small style={{ color: '#0ea5e9', fontWeight: 'bold' }}>{doc.specialist || 'Umum'}</small>
+                                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                                        Rp {parseInt(doc.price || 0).toLocaleString('id-ID')}
+                                    </div>
+                                </div>
+                                
+                                <button 
+                                    onClick={() => navigate(`/doctor/${doc.id}`)} // Nanti buat halaman detail
+                                    style={{
+                                        background: '#0ea5e9', color: 'white', border: 'none', padding: '10px 20px',
+                                        borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
+                                    }}
+                                >
+                                    Chat
+                                </button>
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <h4 style={{ margin: 0, fontSize: '16px' }}>{doc.name}</h4>
-                                <small style={{ color: '#0ea5e9' }}>{doc.sp}</small>
-                            </div>
-                            <button style={{
-                                background: '#e11d48',
-                                color: 'white',
-                                border: 'none',
-                                padding: '8px 20px',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                fontWeight: 'bold'
-                            }}>Chat</button>
-                        </div>
-                    ))}
-                </div>
+                        )) : <p>Tidak ada dokter ditemukan.</p>}
+                    </div>
+                )}
             </div>
 
         </div>
