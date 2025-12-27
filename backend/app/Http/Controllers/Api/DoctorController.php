@@ -60,4 +60,29 @@ class DoctorController extends Controller
 
         return response()->json($formattedDoctors);
     }
+    public function show($id)
+    {
+        $doctor = DB::table('doctors')
+            ->join('users', 'doctors.user_id', '=', 'users.id')
+            ->where('doctors.id', $id)
+            ->select(
+                'doctors.id',
+                'users.name',
+                'doctors.specialization',
+                'doctors.experience_years',
+                'doctors.consultation_fee',
+                'doctors.photo',
+                'doctors.is_online'
+            )
+            ->first();
+
+        if (!$doctor) {
+            return response()->json(['message' => 'Dokter tidak ditemukan'], 404);
+        }
+
+        // Pakai foto default kalau kosong
+        $doctor->photo = $doctor->photo ? $doctor->photo : 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png';
+
+        return response()->json($doctor);
+    }
 }

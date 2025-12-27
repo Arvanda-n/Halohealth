@@ -4,6 +4,7 @@ import Doctors from './pages/Doctors'
 import Login from './pages/login'
 import Register from './pages/Register' 
 import Medicines from './pages/Medicines'
+import DoctorDetail from './pages/DoctorDetail';
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} /> 
         <Route path="/medicines" element={<Medicines />} />
+        <Route path="/doctors/:id" element={<DoctorDetail />} />
         
       </Routes>
     </BrowserRouter>
