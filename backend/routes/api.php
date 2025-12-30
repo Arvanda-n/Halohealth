@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\DoctorController;
-use App\Http\Controllers\Api\CategoryController; // Pastikan tulisannya Api atau API sesuai nama folder
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConsultationController;
 
 /*
@@ -20,7 +20,7 @@ use App\Http\Controllers\Api\ConsultationController;
 
 // Auth
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login'); // Tambahin ->name('login') biar error "Route not defined" hilang selamanya
 
 // Obat (Orang belum login boleh lihat katalog)
 Route::get('/medicines', [MedicineController::class, 'index']);
@@ -29,6 +29,10 @@ Route::get('/medicines/{id}', [MedicineController::class, 'show']);
 // Dokter (Orang boleh lihat daftar dokter)
 Route::get('/doctors', [DoctorController::class, 'index']);
 Route::get('/doctors/{id}', [DoctorController::class, 'show']);
+
+// 👇👇👇 PINDAHAN SEMENTARA (Biar Thunder Client lancar) 👇👇👇
+Route::post('/doctors', [DoctorController::class, 'store']); 
+// 👆👆👆
 
 // Kategori
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -49,13 +53,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // --- FITUR KONSULTASI ---
-    Route::post('/consultations', [ConsultationController::class, 'store']); // Pasien Kirim Pertanyaan
-    Route::get('/consultations', [ConsultationController::class, 'index']);  // Lihat History
-    Route::put('/consultations/{id}', [ConsultationController::class, 'update']); // Dokter Jawab (PENTING INI TADI KURANG)
+    Route::post('/consultations', [ConsultationController::class, 'store']); 
+    Route::get('/consultations', [ConsultationController::class, 'index']);  
+    Route::put('/consultations/{id}', [ConsultationController::class, 'update']);
 
     // --- ADMIN / DOKTER MANAGEMENT ---
-    // (Sebaiknya fitur edit dokter ditaruh sini biar aman)
-    Route::post('/doctors', [DoctorController::class, 'store']); 
+    // Route::post('/doctors', [DoctorController::class, 'store']); // <-- INI KITA PINDAHIN KE ATAS DULU
     Route::put('/doctors/{id}', [DoctorController::class, 'update']); 
     Route::delete('/doctors/{id}', [DoctorController::class, 'destroy']);
 
@@ -66,4 +69,3 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/medicines/{id}', [MedicineController::class, 'destroy']); 
     });
 });
-

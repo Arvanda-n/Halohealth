@@ -10,14 +10,16 @@ return new class extends Migration
      * Run the migrations.
      */
     // database/migrations/xxxx_xx_xx_create_doctors_table.php
-public function up(): void
+public function up()
 {
     Schema::create('doctors', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Link ke tabel user
-        $table->string('specialization'); // Contoh: Umum, Anak, Gigi
+        $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+        $table->string('specialization');
         $table->integer('experience_years');
         $table->integer('consultation_fee');
+        $table->string('image')->nullable(); // 👈 PASTIKAN INI 'image', BUKAN 'photo'
+        $table->string('hospital')->nullable();
         $table->boolean('is_online')->default(false);
         $table->timestamps();
     });

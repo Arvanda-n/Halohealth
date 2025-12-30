@@ -15,11 +15,13 @@ public function up(): void
     Schema::create('medicines', function (Blueprint $table) {
         $table->id();
         $table->string('name');
-        $table->string('slug'); // Untuk URL cantik
-        $table->text('description');
+        $table->string('slug'); 
+        $table->string('category'); // <--- TAMBAHAN PENTING
+        $table->string('sub_category')->nullable(); // <--- TAMBAHAN PENTING
+        $table->text('description')->nullable();
         $table->integer('price');
         $table->integer('stock');
-        $table->string('image')->nullable(); // Foto obat
+        $table->string('image')->nullable();
         $table->timestamps();
     });
 }
