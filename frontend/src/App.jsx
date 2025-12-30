@@ -6,6 +6,7 @@ import Register from './pages/Register'
 import Medicines from './pages/Medicines'
 import DoctorDetail from './pages/DoctorDetail';
 import BookingCheckout from './pages/BookingCheckout';
+import Cart from './pages/Cart'; 
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/medicines" element={<Medicines />} />
         <Route path="/doctors/:id" element={<DoctorDetail />} />
         <Route path="/booking-checkout" element={<BookingCheckout />} />
+        <Route path="/cart" element={<Cart />} />
         
       </Routes>
     </BrowserRouter>
