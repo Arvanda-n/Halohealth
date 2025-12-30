@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Medicine;
-use App\Models\Doctor;
+#use App\Models\Medicine;
+// use App\Models\Doctor;
 use App\Models\Article;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -21,40 +21,41 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        // 2. Buat User Dokter & Data Dokternya
-        $doctorUser = User::create([
-            'name' => 'Dr. Strange',
-            'phone' => '081298765432',
-            'password' => Hash::make('password123'),
-            'role' => 'doctor',
-        ]);
+        // // 2. Buat User Dokter & Data Dokternya
+        // $doctorUser = User::create([
+        //     'name' => 'Dr. Strange',
+        //     'phone' => '081298765432',
+        //     'password' => Hash::make('password123'),
+        //     'role' => 'doctor',
+        // ]);
 
-        Doctor::create([
-            'user_id' => $doctorUser->id,
-            'specialization' => 'Spesialis Bedah Syaraf',
-            'experience_years' => 10,
-            'consultation_fee' => 50000,
-            'is_online' => true
-        ]);
+        // Doctor::create([
+        //     'user_id' => $doctorUser->id,
+        //     'specialization' => 'Spesialis Bedah Syaraf',
+        //     'experience_years' => 10,
+        //     'consultation_fee' => 50000,
+        //     'is_online' => true
+        // ]);
 
         // 3. Buat Data Obat Dummy
-        Medicine::create([
-            'name' => 'Paracetamol 500mg',
-            'slug' => 'paracetamol-500mg',
-            'description' => 'Obat penurun demam dan pereda nyeri.',
-            'price' => 5000,
-            'stock' => 100,
-            'image' => 'https://via.placeholder.com/150'
-        ]);
-
-        Medicine::create([
-            'name' => 'Vitamin C 1000mg',
-            'slug' => 'vitamin-c-1000mg',
-            'description' => 'Menjaga daya tahan tubuh.',
-            'price' => 15000,
-            'stock' => 50,
-            'image' => 'https://via.placeholder.com/150'
-        ]);
+        // Medicine::create([
+        //     'name' => 'Paracetamol 500mg',
+        //     'slug' => 'paracetamol-500mg',
+        //     'description' => 'Obat penurun demam dan pereda nyeri.',
+        //     'price' => 5000,
+        //     'stock' => 100,
+        //     'image' => 'https://via.placeholder.com/150'
+        // ]);
+        $this->call(DoctorSeeder::class);
+        // Medicine::create([
+        //     'name' => 'Vitamin C 1000mg',
+        //     'slug' => 'vitamin-c-1000mg',
+        //     'description' => 'Menjaga daya tahan tubuh.',
+        //     'price' => 15000,
+        //     'stock' => 50,
+        //     'image' => 'https://via.placeholder.com/150'
+        // ]);
+        $this->call(MedicineSeeder::class);
 
         // 4. Buat Artikel Dummy
         Article::create([

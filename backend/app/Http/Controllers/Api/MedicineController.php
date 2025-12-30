@@ -11,10 +11,26 @@ class MedicineController extends Controller
 {
     // 1. GET ALL (Lihat Semua)
     public function index()
-    {
-        return response()->json(Medicine::all());
-    }
+{
+    $medicines = Medicine::all();
 
+    // Format data biar cocok sama Frontend React (sub_category jadi sub)
+    $formatted = $medicines->map(function($item) {
+        return [
+            'id' => $item->id,
+            'name' => $item->name,
+            'slug' => $item->slug,
+            'price' => $item->price,
+            'stock' => $item->stock,
+            'category' => $item->category,
+            'sub' => $item->sub_category, // <--- INI KUNCINYA BIAR FE GAK ERROR
+            'image' => $item->image,
+            'description' => $item->description
+        ];
+    });
+
+    return response()->json($formatted);
+}
     // 2. CREATE (Tambah)
     public function store(Request $request)
     {

@@ -5,32 +5,59 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class DoctorController extends Controller
 {
+    // 1. CREATE (BIKIN USER + DOKTER SEKALIGUS)
     public function store(Request $request)
     {
+        // Validasi input
         $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'name' => 'required',
+            'phone' => 'required|unique:users,phone',
+            'password' => 'required',
             'specialization' => 'required',
             'experience_years' => 'required|numeric',
             'consultation_fee' => 'required|numeric',
         ]);
 
-        $id = DB::table('doctors')->insertGetId([
-            'user_id' => $request->user_id,
-            'specialization' => $request->specialization,
-            'experience_years' => $request->experience_years,
-            'consultation_fee' => $request->consultation_fee,
-            'photo' => $request->image, // 👈 UBAH DISINI: Kolom DB 'photo', Input JSON 'image'
-            'is_online' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        try {
+            $result = DB::transaction(function () use ($request) {
+                
+                // A. INSERT KE TABEL USERS
+                $userId = DB::table('users')->insertGetId([
+                    'name' => $request->name,
+                    'phone' => $request->phone,
+                    'password' => Hash::make($request->password),
+                    'role' => 'doctor',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-        return response()->json(['message' => 'Dokter Berhasil Ditambahkan!', 'id' => $id], 201);
+                // B. INSERT KE TABEL DOCTORS (Gunakan 'image' bukan 'photo')
+                $doctorId = DB::table('doctors')->insertGetId([
+                    'user_id' => $userId,
+                    'specialization' => $request->specialization,
+                    'experience_years' => $request->experience_years,
+                    'consultation_fee' => $request->consultation_fee,
+                    'image' => $request->image, // <--- SUDAH DIPERBAIKI JADI 'image'
+                    'is_online' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                return $doctorId;
+            });
+
+            return response()->json(['message' => 'Dokter Berhasil Dibuat!', 'id' => $result], 201);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal membuat dokter: ' . $e->getMessage()], 500);
+        }
     }
 
+    // 2. GET ALL
     public function index()
     {
         $doctors = DB::table('doctors')
@@ -40,26 +67,27 @@ class DoctorController extends Controller
                 'users.name',
                 'doctors.specialization',
                 'doctors.consultation_fee',
-                'doctors.photo' // 👈 UBAH DISINI: Ambil dari kolom 'photo'
+                'doctors.image', // <--- SUDAH DIPERBAIKI
+                'doctors.is_online'
             )
             ->get();
 
         $formattedDoctors = $doctors->map(function ($doc) {
-            // Cek kolom 'photo', bukan 'image'
-            $foto = $doc->photo ? $doc->photo : 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png';
-
             return [
                 'id' => $doc->id,
                 'name' => $doc->name,
                 'specialist' => $doc->specialization,
                 'price' => $doc->consultation_fee,
-                'image' => $foto, // Frontend tetap taunya 'image', jadi biarin ini 'image'
+                'image' => $doc->image ?? 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png',
+                'is_online' => $doc->is_online,
                 'rating' => '5.0'
             ];
         });
 
         return response()->json($formattedDoctors);
     }
+
+    // 3. SHOW DETAIL
     public function show($id)
     {
         $doctor = DB::table('doctors')
@@ -71,7 +99,8 @@ class DoctorController extends Controller
                 'doctors.specialization',
                 'doctors.experience_years',
                 'doctors.consultation_fee',
-                'doctors.photo',
+                'doctors.image', // <--- SUDAH DIPERBAIKI
+                'doctors.hospital', 
                 'doctors.is_online'
             )
             ->first();
@@ -80,9 +109,17 @@ class DoctorController extends Controller
             return response()->json(['message' => 'Dokter tidak ditemukan'], 404);
         }
 
-        // Pakai foto default kalau kosong
-        $doctor->photo = $doctor->photo ? $doctor->photo : 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png';
+        $response = [
+            'id' => $doctor->id,
+            'name' => $doctor->name,
+            'specialist' => $doctor->specialization,
+            'experience_years' => $doctor->experience_years,
+            'price' => $doctor->consultation_fee,
+            'image' => $doctor->image ?? 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png',
+            'hospital' => $doctor->hospital ?? 'HaloHealth Hospital',
+            'is_online' => $doctor->is_online
+        ];
 
-        return response()->json($doctor);
+        return response()->json($response);
     }
 }

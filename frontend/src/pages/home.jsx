@@ -32,7 +32,7 @@ export default function Home() {
   // --- DATA KONTEN ---
   const services = [
     { icon: chatIcon, title: "Chat dengan Dokter", subtitle: "Tanya dokter spesialis", link: "/doctors" },
-    { icon: tokoIcon, title: "Toko Kesehatan", subtitle: "Cek obat & vitamin", link: "#" },
+    { icon: tokoIcon, title: "Toko Kesehatan", subtitle: "Cek obat & vitamin", link: "/medicines" },
     { icon: homecareIcon, title: "Homecare", subtitle: "Medis ke rumah", link: "#" },
     { icon: asuransiIcon, title: "Asuransi", subtitle: "Hubungkan asuransi", link: "#" },
     { icon: skinIcon, title: "HaloSkin", subtitle: "Solusi kulit sehat", link: "#" },
