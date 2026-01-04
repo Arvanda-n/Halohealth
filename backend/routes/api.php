@@ -9,7 +9,8 @@ use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConsultationController;
-use App\Http\Controllers\Api\CartController; // 👈 JANGAN LUPA INI!
+use App\Http\Controllers\Api\CartController; 
+
 
 // Controllers ADMIN (Punya Temanmu)
 use App\Http\Controllers\Api\Admin\UserController;
@@ -34,10 +35,12 @@ Route::get('/medicines/{id}', [MedicineController::class, 'show']);
 Route::get('/doctors', [DoctorController::class, 'index']);
 Route::get('/doctors/{id}', [DoctorController::class, 'show']);
 
-// 👇👇👇 PINDAHAN SEMENTARA (Biar Thunder Client lancar create dokter) 👇👇👇
+// doctor
 Route::post('/doctors', [DoctorController::class, 'store']); 
 // 👆👆👆
 
+//Artikel
+Route::get('/articles', [ArticleController::class, 'index']);
 // Kategori
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);

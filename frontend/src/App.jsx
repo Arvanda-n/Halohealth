@@ -7,6 +7,7 @@ import Medicines from './pages/Medicines'
 import DoctorDetail from './pages/DoctorDetail';
 import BookingCheckout from './pages/BookingCheckout';
 import Cart from './pages/Cart'; 
+import Articles from './pages/Articles';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/doctors/:id" element={<DoctorDetail />} />
         <Route path="/booking-checkout" element={<BookingCheckout />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/articles" element={<Articles />} />
         
       </Routes>
     </BrowserRouter>

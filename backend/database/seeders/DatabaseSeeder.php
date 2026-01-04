@@ -56,6 +56,7 @@ class DatabaseSeeder extends Seeder
         //     'image' => 'https://via.placeholder.com/150'
         // ]);
         $this->call(MedicineSeeder::class);
+        $this->call(ArticleSeeder::class);
 
         // 4. Buat Artikel Dummy
         Article::create([
