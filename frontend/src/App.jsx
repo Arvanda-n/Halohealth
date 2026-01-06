@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
+// --- PAGES USER ---
 import Home from './pages/home'
 import Doctors from './pages/Doctors'
 import Login from './pages/login'
@@ -8,11 +10,25 @@ import DoctorDetail from './pages/DoctorDetail';
 import BookingCheckout from './pages/BookingCheckout';
 import Cart from './pages/Cart'; 
 import Articles from './pages/Articles';
+import ArticleDetail from './pages/ArticleDetail';
+
+// --- LAYOUT & ADMIN PAGES ---
+import AdminLayout from './layouts/AdminLayout';
+import Dashboard from './pages/admin/Dashboard';
+import AdminArticles from './pages/admin/AdminArticles';
+import AdminArticleCreate from './pages/admin/AdminArticleCreate';
+import AdminDoctors from './pages/admin/AdminDoctors'; // 👈 1. TAMBAH IMPORT INI
+import AdminDoctorCreate from './pages/admin/AdminDoctorCreate';
+import AdminDoctorEdit from './pages/admin/AdminDoctorEdit';
+import AdminMedicines from './pages/admin/AdminMedicines';
+import AdminMedicineCreate from './pages/admin/AdminMedicineCreate';
+import AdminMedicineEdit from './pages/admin/AdminMedicineEdit';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* PUBLIC ROUTES */}
         <Route path="/" element={<Home />} />
         <Route path="/doctors" element={<Doctors />} />
         <Route path="/login" element={<Login />} />
@@ -22,7 +38,28 @@ export default function App() {
         <Route path="/booking-checkout" element={<BookingCheckout />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/articles" element={<Articles />} />
-        
+        <Route path="/articles/:id" element={<ArticleDetail />} />
+
+        {/* ADMIN ROUTES */}
+        <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            
+            {/* Module Articles */}
+            <Route path="articles" element={<AdminArticles />} />
+            <Route path="articles/create" element={<AdminArticleCreate />} />
+            
+            {/* Module Doctors */}
+            <Route path="doctors" element={<AdminDoctors />} />       {/* 👈 2. TAMBAH ROUTE LIST DOKTER */}
+            <Route path="doctors/create" element={<AdminDoctorCreate />} />
+            <Route path="doctors/edit/:id" element={<AdminDoctorEdit />} />
+
+            {/* Module Medicines */}
+            <Route path="medicines" element={<AdminMedicines />} />
+            <Route path="medicines/create" element={<AdminMedicineCreate />} />
+            <Route path="medicines/edit/:id" element={<AdminMedicineEdit />} />
+            
+        </Route>
+
       </Routes>
     </BrowserRouter>
   )

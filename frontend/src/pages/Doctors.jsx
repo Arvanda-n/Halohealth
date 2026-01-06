@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/Footer';
 import { 
-    Search, MapPin, Star, Stethoscope, 
+    Search, Star, Stethoscope, 
     Baby, Heart, Eye, Brain, Smile, 
     Zap, Activity, Loader2, MessageCircle, ShieldCheck, Clock
 } from 'lucide-react';
@@ -17,7 +17,7 @@ export default function Doctors() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
 
-  // LIST KATEGORI (Tanpa "Lainnya")
+  // LIST KATEGORI
   const categories = [
     { name: 'Dokter Umum', icon: <Stethoscope size={24} color="#0ea5e9" />, color: '#e0f2fe' },
     { name: 'Spesialis Anak', icon: <Baby size={24} color="#ec4899" />, color: '#fce7f3' },
@@ -32,15 +32,18 @@ export default function Doctors() {
     { name: 'Spesialis Jantung', icon: <Heart size={24} color="#ef4444" />, color: '#fee2e2' },
   ];
 
-  // FETCH DATA
+  // FETCH DATA (SINKRON DENGAN BACKEND BARU)
   useEffect(() => {
     const fetchDoctors = async () => {
         try {
             const response = await fetch('http://127.0.0.1:8000/api/doctors');
-            const data = await response.json();
-            setDoctors(data);
+            const result = await response.json();
+            // Ambil data dari result.data karena struktur API baru
+            const finalData = result.data ? result.data : (Array.isArray(result) ? result : []);
+            setDoctors(finalData);
         } catch (error) {
             console.error("Gagal ambil data dokter:", error);
+            setDoctors([]);
         } finally {
             setLoading(false);
         }
@@ -50,22 +53,29 @@ export default function Doctors() {
 
   // FILTER LOGIC
   const filteredDoctors = doctors.filter(doc => {
-      const categoryMatch = selectedCategory === "Semua" ? true : doc.specialist === selectedCategory;
-      const searchMatch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
+      // Menggunakan doc.specialization sesuai database
+      const categoryMatch = selectedCategory === "Semua" ? true : (doc.specialization || doc.specialist) === selectedCategory;
+      const name = doc.user?.name || doc.name || "";
+      const searchMatch = name.toLowerCase().includes(searchTerm.toLowerCase());
       return categoryMatch && searchMatch;
   });
+
+  // HELPER URL GAMBAR
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "https://cdn-icons-png.flaticon.com/512/3774/3774299.png";
+    if (imagePath.startsWith('http')) return imagePath;
+    return `http://127.0.0.1:8000/${imagePath.replace(/^\//, '')}`;
+  };
 
   return (
     <div style={{ background: 'white', minHeight: '100vh', fontFamily: '"Inter", sans-serif', color: '#333' }}>
       <Header />
 
-      {/* CONTAINER UTAMA */}
       <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px' }}>
         
-        {/* === SECTION ATAS: SPLIT LAYOUT (KIRI TEKS, KANAN KATEGORI) === */}
+        {/* === SECTION ATAS: SPLIT LAYOUT === */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '50px', alignItems: 'start', marginBottom: '60px' }}>
             
-            {/* BAGIAN KIRI (BANNER INFO) */}
             <div className='hidden-mobile'> 
                 <h1 style={{ fontSize: '26px', fontWeight: 'bold', color: '#334155', marginBottom: '10px' }}>
                     Chat Dokter di HaloHealth
@@ -74,7 +84,6 @@ export default function Doctors() {
                     Layanan telemedisin yang siap siaga untuk bantu kamu hidup lebih sehat.
                 </p>
 
-                {/* Ilustrasi Gambar (Placeholder) */}
                 <div style={{ marginBottom: '30px' }}>
                     <img 
                         src="https://img.freepik.com/free-vector/doctor-consultation-concept-illustration_114360-1296.jpg" 
@@ -102,9 +111,7 @@ export default function Doctors() {
                 </ul>
             </div>
 
-            {/* BAGIAN KANAN (SEARCH & KATEGORI) */}
             <div>
-                 {/* SEARCH BAR */}
                  <div style={{ marginBottom: '30px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderRadius: '8px', padding: '5px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                         <Search style={{ marginLeft: '15px', color: '#cbd5e1' }} />
@@ -118,42 +125,22 @@ export default function Doctors() {
                     </div>
                 </div>
 
-                {/* JUDUL KATEGORI */}
                 <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#334155' }}>
                     Cari Dokter atau Spesialisasi
                 </h3>
 
-                {/* GRID KATEGORI */}
-                <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(4, 1fr)', // 4 Kolom
-                    gap: '25px 10px', 
-                    justifyContent: 'center' 
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '25px 10px', justifyContent: 'center' }}>
                     {categories.map((cat) => (
-                        <div 
-                            key={cat.name}
-                            onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'Semua' : cat.name)}
-                            style={{ 
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', 
-                                cursor: 'pointer', textAlign: 'center', opacity: (selectedCategory === "Semua" || selectedCategory === cat.name) ? 1 : 0.4
-                            }}
-                        >
-                            <div style={{ 
-                                width: '55px', height: '55px', borderRadius: '50%', 
-                                background: cat.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                marginBottom: '10px', transition: '0.2s', border: selectedCategory === cat.name ? '2px solid #0ea5e9' : 'none'
-                            }}>
+                        <div key={cat.name} onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'Semua' : cat.name)}
+                             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', textAlign: 'center', opacity: (selectedCategory === "Semua" || selectedCategory === cat.name) ? 1 : 0.4 }}>
+                            <div style={{ width: '55px', height: '55px', borderRadius: '50%', background: cat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', border: selectedCategory === cat.name ? '2px solid #0ea5e9' : 'none' }}>
                                 {cat.icon}
                             </div>
-                            <span style={{ fontSize: '12px', color: '#475569', lineHeight: '1.3', fontWeight: '500' }}>
-                                {cat.name}
-                            </span>
+                            <span style={{ fontSize: '12px', color: '#475569', lineHeight: '1.3', fontWeight: '500' }}>{cat.name}</span>
                         </div>
                     ))}
                 </div>
 
-                {/* HASIL DOKTER (MUNCUL DI BAWAH KATEGORI) */}
                 <div style={{ marginTop: '40px' }}>
                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#334155', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px' }}>
                         {selectedCategory === "Semua" ? "Rekomendasi Dokter Terbaik" : `Dokter ${selectedCategory}`}
@@ -165,28 +152,19 @@ export default function Doctors() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
                             {filteredDoctors.length > 0 ? (
                                 filteredDoctors.map((doc) => (
-                                    <div key={doc.id} 
-                                        onClick={() => navigate(`/doctors/${doc.id}`, { state: doc })}
-                                        style={{ 
-                                            display: 'flex', gap: '15px', padding: '15px',
-                                            background: 'white', borderRadius: '12px', 
-                                            border: '1px solid #e2e8f0', cursor: 'pointer',
-                                            transition: '0.2s'
-                                        }}
-                                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0ea5e9'}
-                                        onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
-                                    >
+                                    <div key={doc.id} onClick={() => navigate(`/doctors/${doc.id}`)}
+                                         style={{ display: 'flex', gap: '15px', padding: '15px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer', transition: '0.2s' }}>
                                         <img 
-                                            src={doc.image} alt={doc.name} 
+                                            src={getImageUrl(doc.image)} alt="doctor" 
                                             style={{ width: '70px', height: '70px', borderRadius: '10px', objectFit: 'cover' }}
                                             onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"}
                                         />
                                         <div style={{ flex: 1 }}>
-                                            <h4 style={{ margin: '0 0 5px', fontSize: '16px', fontWeight: 'bold' }}>{doc.name}</h4>
-                                            <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#0ea5e9' }}>{doc.specialist}</p>
+                                            <h4 style={{ margin: '0 0 5px', fontSize: '16px', fontWeight: 'bold' }}>{doc.user?.name || doc.name}</h4>
+                                            <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#0ea5e9' }}>{doc.specialization || doc.specialist}</p>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{doc.hospital || 'RS HaloHealth'}</span>
-                                                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f59e0b' }}>Rp {doc.price?.toLocaleString()}</span>
+                                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{doc.experience_years || 0} Tahun Pengalaman</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f59e0b' }}>Rp {(doc.consultation_fee || doc.price || 0).toLocaleString()}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -197,11 +175,10 @@ export default function Doctors() {
                         </div>
                     )}
                 </div>
-
             </div>
         </div>
 
-        {/* === SECTION SEO TEXT (PALING BAWAH) === */}
+        {/* === SECTION SEO TEXT (HAPUS JANGAN SAMPAI ILANG!) === */}
         <div style={{ marginTop: '80px', borderTop: '1px solid #e2e8f0', paddingTop: '40px', color: '#64748b', fontSize: '14px', lineHeight: '1.8' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#334155', marginBottom: '15px' }}>
                 Tanya Dokter Umum dan Spesialis di HaloHealth
@@ -253,7 +230,6 @@ export default function Doctors() {
         </div>
 
       </div>
-
       <Footer />
     </div>
   );

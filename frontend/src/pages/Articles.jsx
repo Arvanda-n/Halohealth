@@ -1,33 +1,60 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 👈 Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/Footer';
 import { Calendar, User, ArrowRight, Loader2, Tag } from 'lucide-react';
 
 export default function Articles() {
-  const navigate = useNavigate(); // 👈 Pake hook ini
+  const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null); // Buat nangkep error biar ketahuan
 
-  // FETCH DATA DARI API (Tanpa Dummy-dummyan)
+  // FETCH DATA DARI API
   useEffect(() => {
     const fetchArticles = async () => {
         try {
+            // Kita panggil API Backend
             const response = await fetch('http://127.0.0.1:8000/api/articles');
-            if (response.ok) {
-                const data = await response.json();
-                setArticles(data);
-            } else {
-                console.error("Gagal ambil artikel");
+            
+            // Cek status. Kalau bukan 200 OK (misal 500 Error), lempar ke catch
+            if (!response.ok) {
+                throw new Error(`Error Backend: ${response.status} ${response.statusText}`);
             }
+
+            const result = await response.json();
+            console.log("Data dari Backend:", result); // Cek di Console Browser (F12)
+
+            // 🔥 LOGIKA PENGAMBILAN DATA (ANTI-GAGAL)
+            // 1. Cek apakah result punya properti 'data'? (Format standar Laravel Resource)
+            // 2. Kalau gak punya, mungkin dia langsung array?
+            let finalData = [];
+            
+            if (result.data && Array.isArray(result.data)) {
+                finalData = result.data;
+            } else if (Array.isArray(result)) {
+                finalData = result;
+            }
+
+            setArticles(finalData);
+
         } catch (err) {
-            console.error("Error backend:", err);
+            console.error("Gagal Fetch:", err);
+            setErrorMsg(err.message); // Tampilkan error di layar biar jelas
         } finally {
             setLoading(false);
         }
     };
     fetchArticles();
   }, []);
+
+  // HELPER: URL GAMBAR (Biar gak broken image)
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "https://placehold.co/600x400?text=No+Image";
+    if (imagePath.startsWith('http')) return imagePath;
+    const cleanPath = imagePath.replace(/^\/|storage\//g, ''); 
+    return `http://127.0.0.1:8000/storage/${cleanPath}`;
+  };
 
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: '"Inter", sans-serif' }}>
@@ -46,6 +73,14 @@ export default function Articles() {
       {/* LIST ARTIKEL */}
       <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px' }}>
         
+        {/* TAMPILAN ERROR (Kalau backend mati) */}
+        {errorMsg && (
+            <div style={{ padding: '20px', background: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', border: '1px solid #fca5a5' }}>
+                <strong>Waduh Error Bang:</strong> {errorMsg} <br/>
+                <small>Coba cek terminal backend, pastikan tidak ada error merah.</small>
+            </div>
+        )}
+
         {loading ? (
              <div style={{ textAlign: 'center', padding: '50px' }}>
                 <Loader2 className="animate-spin" size={40} color="#0ea5e9" style={{ margin: '0 auto' }} />
@@ -56,29 +91,25 @@ export default function Articles() {
                 {articles.map((item) => (
                     <div key={item.id} 
                          style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', transition: '0.3s', cursor: 'pointer', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}
-                         onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'; }}
-                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.05)'; }}
                     >
                         {/* GAMBAR */}
                         <div style={{ height: '200px', overflow: 'hidden', background: '#f1f5f9' }}>
                             <img 
-                                src={item.image.startsWith('http') ? item.image : `http://127.0.0.1:8000${item.image}`} 
+                                src={getImageUrl(item.thumbnail || item.image)} 
                                 alt={item.title} 
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                onError={(e) => e.target.src = "https://placehold.co/600x400?text=No+Image"} // Jaga-jaga kalau gambar error
+                                onError={(e) => e.target.src = "https://placehold.co/600x400?text=No+Image"} 
                             />
                         </div>
 
                         {/* KONTEN */}
                         <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            
-                            {/* TAG CATEGORY */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                                 <span style={{ background: '#e0f2fe', color: '#0ea5e9', fontSize: '12px', fontWeight: 'bold', padding: '5px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     <Tag size={12} /> {item.category || 'Umum'}
                                 </span>
                                 <span style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <Calendar size={12} /> {new Date(item.created_at).toLocaleDateString('id-ID')}
+                                    <Calendar size={12} /> {item.published_at ? new Date(item.published_at).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID')}
                                 </span>
                             </div>
 
@@ -86,7 +117,6 @@ export default function Articles() {
                                 {item.title}
                             </h3>
                             
-                            {/* PREVIEW KONTEN (Potong biar gak kepanjangan) */}
                             <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.6', marginBottom: '20px', flex: 1 }}>
                                 {item.content ? item.content.substring(0, 100) + "..." : "Baca selengkapnya..."}
                             </p>
@@ -109,6 +139,8 @@ export default function Articles() {
         ) : (
             <div style={{ textAlign: 'center', padding: '50px', color: '#64748b' }}>
                 <p>Belum ada artikel yang tersedia.</p>
+                {/* Kalau masih kosong, mungkin DB kosong */}
+                <small style={{display:'block', marginTop:'10px'}}>Pastikan seeder artikel sudah dijalankan.</small>
             </div>
         )}
 

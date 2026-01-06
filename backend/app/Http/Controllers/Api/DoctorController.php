@@ -3,123 +3,191 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Doctor;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\File; // Tambahkan ini untuk hapus file
+use Illuminate\Support\Facades\Validator;
 
 class DoctorController extends Controller
 {
-    // 1. CREATE (BIKIN USER + DOKTER SEKALIGUS)
+    // 1. GET ALL
+    public function index()
+    {
+        $doctors = Doctor::with('user')->latest()->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $doctors
+        ], 200);
+    }
+
+    // 2. CREATE (SIMPAN BARU)
     public function store(Request $request)
     {
-        // Validasi input
-        $request->validate([
-            'name' => 'required',
-            'phone' => 'required|unique:users,phone',
-            'password' => 'required',
+        $validator = Validator::make($request->all(), [
+            'name'           => 'required|string|max:255',
+            'email'          => 'required|email|unique:users,email',
+            'phone'          => 'required',
+            'password'       => 'required|min:6',
             'specialization' => 'required',
-            'experience_years' => 'required|numeric',
-            'consultation_fee' => 'required|numeric',
+            'experience_years'=> 'required|numeric',
+            'consultation_fee'=> 'required|numeric',
+            'photo'          => 'nullable|image|max:10240', // Maksimal 10MB
         ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
         try {
             $result = DB::transaction(function () use ($request) {
-                
-                // A. INSERT KE TABEL USERS
-                $userId = DB::table('users')->insertGetId([
-                    'name' => $request->name,
-                    'phone' => $request->phone,
+                // A. Buat User Akun
+                $user = User::create([
+                    'name'     => $request->name,
+                    'email'    => $request->email,
+                    'phone'    => $request->phone,
                     'password' => Hash::make($request->password),
-                    'role' => 'doctor',
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'role'     => 'doctor',
                 ]);
 
-                // B. INSERT KE TABEL DOCTORS (Gunakan 'image' bukan 'photo')
-                $doctorId = DB::table('doctors')->insertGetId([
-                    'user_id' => $userId,
-                    'specialization' => $request->specialization,
+                // B. PROSES UPLOAD FOTO (Metode Direct ke Public)
+                $photoUrl = null;
+                if ($request->hasFile('photo')) {
+                    $image = $request->file('photo');
+                    $filename = time() . '_' . $image->hashName();
+                    
+                    // Simpan ke folder public/uploads/doctors
+                    $image->move(public_path('uploads/doctors'), $filename);
+                    
+                    // Buat link URL lengkap
+                    $photoUrl = url('uploads/doctors/' . $filename);
+                }
+
+                // C. Buat Data Dokter
+                $doctor = Doctor::create([
+                    'user_id'          => $user->id,
+                    'specialization'   => $request->specialization,
                     'experience_years' => $request->experience_years,
                     'consultation_fee' => $request->consultation_fee,
-                    'image' => $request->image, // <--- SUDAH DIPERBAIKI JADI 'image'
-                    'is_online' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'image'            => $photoUrl,
+                    'is_online'        => true,
                 ]);
 
-                return $doctorId;
+                return $doctor;
             });
 
-            return response()->json(['message' => 'Dokter Berhasil Dibuat!', 'id' => $result], 201);
+            return response()->json(['success' => true, 'message' => 'Dokter Berhasil Dibuat!', 'data' => $result], 201);
 
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal membuat dokter: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Gagal: ' . $e->getMessage()], 500);
         }
-    }
-
-    // 2. GET ALL
-    public function index()
-    {
-        $doctors = DB::table('doctors')
-            ->join('users', 'doctors.user_id', '=', 'users.id')
-            ->select(
-                'doctors.id',
-                'users.name',
-                'doctors.specialization',
-                'doctors.consultation_fee',
-                'doctors.image', // <--- SUDAH DIPERBAIKI
-                'doctors.is_online'
-            )
-            ->get();
-
-        $formattedDoctors = $doctors->map(function ($doc) {
-            return [
-                'id' => $doc->id,
-                'name' => $doc->name,
-                'specialist' => $doc->specialization,
-                'price' => $doc->consultation_fee,
-                'image' => $doc->image ?? 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png',
-                'is_online' => $doc->is_online,
-                'rating' => '5.0'
-            ];
-        });
-
-        return response()->json($formattedDoctors);
     }
 
     // 3. SHOW DETAIL
     public function show($id)
     {
-        $doctor = DB::table('doctors')
-            ->join('users', 'doctors.user_id', '=', 'users.id')
-            ->where('doctors.id', $id)
-            ->select(
-                'doctors.id',
-                'users.name',
-                'doctors.specialization',
-                'doctors.experience_years',
-                'doctors.consultation_fee',
-                'doctors.image', // <--- SUDAH DIPERBAIKI
-                'doctors.hospital', 
-                'doctors.is_online'
-            )
-            ->first();
+        $doctor = Doctor::with('user')->find($id);
 
         if (!$doctor) {
             return response()->json(['message' => 'Dokter tidak ditemukan'], 404);
         }
 
-        $response = [
-            'id' => $doctor->id,
-            'name' => $doctor->name,
-            'specialist' => $doctor->specialization,
-            'experience_years' => $doctor->experience_years,
-            'price' => $doctor->consultation_fee,
-            'image' => $doctor->image ?? 'https://cdn-icons-png.flaticon.com/512/3774/3774299.png',
-            'hospital' => $doctor->hospital ?? 'HaloHealth Hospital',
-            'is_online' => $doctor->is_online
-        ];
+        return response()->json(['success' => true, 'data' => $doctor]);
+    }
 
-        return response()->json($response);
+    // 4. UPDATE (FULL UPDATE: USER + DOKTER + FOTO)
+    public function update(Request $request, $id)
+    {
+        $doctor = Doctor::find($id);
+        if (!$doctor) return response()->json(['message' => 'Not Found'], 404);
+        
+        $user = User::find($doctor->user_id);
+
+        $validator = Validator::make($request->all(), [
+            'name'           => 'required',
+            'email'          => 'required|email|unique:users,email,'.$user->id, 
+            'phone'          => 'required',
+            'specialization' => 'required',
+            'experience_years'=> 'required|numeric',
+            'consultation_fee'=> 'required|numeric',
+            'photo'          => 'nullable|image|max:10240', 
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $doctor, $user) {
+                // A. Update Akun User
+                $userData = [
+                    'name'  => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                ];
+                if ($request->filled('password')) {
+                    $userData['password'] = Hash::make($request->password);
+                }
+                $user->update($userData);
+
+                // B. Update Data Dokter
+                $doctorData = [
+                    'specialization'   => $request->specialization,
+                    'experience_years' => $request->experience_years,
+                    'consultation_fee' => $request->consultation_fee,
+                ];
+
+                // C. UPDATE FOTO BARU
+                if ($request->hasFile('photo')) {
+                    // Hapus foto lama dari folder public/uploads/doctors
+                    if ($doctor->image) {
+                        $oldFilename = basename($doctor->image);
+                        $oldPath = public_path('uploads/doctors/' . $oldFilename);
+                        if (File::exists($oldPath)) {
+                            File::delete($oldPath);
+                        }
+                    }
+
+                    // Simpan foto baru
+                    $image = $request->file('photo');
+                    $filename = time() . '_' . $image->hashName();
+                    $image->move(public_path('uploads/doctors'), $filename);
+                    $doctorData['image'] = url('uploads/doctors/' . $filename);
+                }
+
+                $doctor->update($doctorData);
+            });
+
+            return response()->json(['message' => 'Update Berhasil', 'data' => $doctor]);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal Update: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // 5. DELETE (Hapus Data & Foto Fisik)
+    public function destroy($id)
+    {
+        $doctor = Doctor::find($id);
+        if (!$doctor) return response()->json(['message' => 'Not Found'], 404);
+
+        $user = User::find($doctor->user_id);
+        
+        // Hapus foto dari folder publik
+        if ($doctor->image) {
+            $filename = basename($doctor->image);
+            $path = public_path('uploads/doctors/' . $filename);
+            if (File::exists($path)) {
+                File::delete($path);
+            }
+        }
+        
+        $doctor->delete();
+        if($user) $user->delete();
+
+        return response()->json(['message' => 'Dokter Berhasil Dihapus']);
     }
 }
