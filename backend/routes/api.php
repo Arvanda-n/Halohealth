@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\DashboardController;
 
 // Controllers ADMIN
 use App\Http\Controllers\Api\Admin\UserController;
+use App\Http\Controllers\Api\Admin\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Management User
         Route::apiResource('/admin/users', UserController::class);
+
+            // Management Order
+        Route::apiResource('/admin/orders', OrderController::class);
+        Route::get('/admin/orders', [OrderController::class, 'index']);
+        Route::put('/admin/orders/{id}', [OrderController::class, 'update']);
 
         // Catatan: Route Master Data (Medicines/Doctors) sudah di-handle 
         // di atas oleh apiResource publik agar React gampang memanggilnya.
