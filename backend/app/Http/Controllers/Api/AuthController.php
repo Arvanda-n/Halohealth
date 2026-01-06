@@ -10,6 +10,34 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+
+// REGISTER ADMIN BARU (DENGAN EMAIL)
+public function createAdmin(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'phone' => 'required|string|unique:users,phone',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|min:6',
+    ]);
+
+    $user = User::create([
+        'name' => $validated['name'],
+        'phone' => $validated['phone'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+        'role' => 'admin',
+    ]);
+
+    return response()->json([
+        'message' => 'Admin berhasil dibuat',
+        'user' => $user
+    ], 201);
+return $this->registerAdmin($request);
+}
+
+
+
     // REGISTER PASIEN
     public function register(Request $request)
     {
@@ -62,6 +90,7 @@ class AuthController extends Controller
     // RESET PASSWORD ADMIN (AMAN)
     public function registerAdmin(Request $request)
     {
+
         $request->validate([
             'password' => 'required|min:6'
         ]);
