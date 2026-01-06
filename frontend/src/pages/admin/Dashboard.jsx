@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Users, Stethoscope, Pill, FileText, Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
-  // State untuk menyimpan angka dari database
   const [statsData, setStatsData] = useState({
     doctors: 0,
     medicines: 0,
@@ -16,13 +15,28 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/admin/dashboard');
+            // 1. Ambil Token dari LocalStorage
+            const token = localStorage.getItem('token'); 
+
+            // 2. Sertakan Token di Header Request
+            const response = await fetch('http://127.0.0.1:8000/api/admin/dashboard', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // 🔥 INI KUNCINYA
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
             if(response.ok) {
                 const result = await response.json();
-                setStatsData(result.data); // Simpan data ke state
+                setStatsData(result.data); 
+            } else {
+                console.error("Gagal ambil data. Status:", response.status);
+                // Kalau token expired (401), bisa redirect ke login (opsional)
             }
         } catch (error) {
-            console.error("Gagal ambil data dashboard:", error);
+            console.error("Error koneksi:", error);
         } finally {
             setLoading(false);
         }
@@ -30,7 +44,6 @@ export default function Dashboard() {
     fetchStats();
   }, []);
 
-  // Format Tampilan Kartu
   const cards = [
     { 
         title: 'Total Dokter', 
@@ -71,7 +84,6 @@ export default function Dashboard() {
         <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e293b', marginBottom: '10px' }}>Dashboard Overview</h1>
         <p style={{ color: '#64748b', marginBottom: '30px' }}>Realtime data dari Database HaloHealth.</p>
 
-        {/* GRID STATISTIK */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
             {cards.map((stat, index) => (
                 <div key={index} style={{ 
@@ -91,7 +103,6 @@ export default function Dashboard() {
             ))}
         </div>
 
-        {/* AREA GRAFIK (Placeholder) */}
         <div style={{ marginTop: '40px', background: 'white', padding: '30px', borderRadius: '16px', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #e2e8f0', color: '#94a3b8' }}>
             Grafik Statistik Pengunjung (Coming Soon)
         </div>

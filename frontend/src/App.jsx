@@ -23,6 +23,9 @@ import AdminDoctorEdit from './pages/admin/AdminDoctorEdit';
 import AdminMedicines from './pages/admin/AdminMedicines';
 import AdminMedicineCreate from './pages/admin/AdminMedicineCreate';
 import AdminMedicineEdit from './pages/admin/AdminMedicineEdit';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminBookings from './pages/admin/AdminBookings';
+import AdminOrders from './pages/admin/AdminOrders';
 
 export default function App() {
   return (
@@ -57,6 +60,12 @@ export default function App() {
             <Route path="medicines" element={<AdminMedicines />} />
             <Route path="medicines/create" element={<AdminMedicineCreate />} />
             <Route path="medicines/edit/:id" element={<AdminMedicineEdit />} />
+
+            {/* Module Users */}
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="bookings" element={<AdminBookings />} />
+            <Route path="orders" element={<AdminOrders />} />
+        
             
         </Route>
 
