@@ -3,7 +3,11 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Controllers UTAMA
+// =====================
+// CONTROLLERS
+// =====================
+
+// Auth & Public
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\DoctorController;
@@ -12,32 +16,33 @@ use App\Http\Controllers\Api\ConsultationController;
 use App\Http\Controllers\Api\CartController; 
 use App\Http\Controllers\Api\ArticleController; 
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\HealthCategoryController;
+use App\Http\Controllers\Api\HealthServiceController;
 
-// Controllers ADMIN
+// Admin Namespace
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\OrderController;
 
 /*
 |--------------------------------------------------------------------------
-| 1. PUBLIC ROUTES (Akses Terbuka)
+| 1. PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
 
-// Auth
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
-// 🔥 OBAT (UPDATE: Pakai apiResource agar POST/PUT/DELETE tersedia)
+// Resources Master Data
 Route::apiResource('/medicines', MedicineController::class);
-
-// 🔥 DOKTER (Sudah benar pakai apiResource)
 Route::apiResource('/doctors', DoctorController::class);
-
-// 🔥 ARTIKEL (Sudah benar pakai apiResource)
 Route::apiResource('/articles', ArticleController::class); 
-
-// Kategori
 Route::apiResource('/categories', CategoryController::class);
+
+// Fitur Beranda Public
+Route::get('/health-categories', [HealthCategoryController::class, 'index']);
+Route::get('/health-services', [HealthServiceController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
@@ -46,41 +51,50 @@ Route::apiResource('/categories', CategoryController::class);
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Cek User Login
+    // User Profile & Logout
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
-    // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // --- 🛒 KERANJANG ---
     Route::apiResource('/carts', CartController::class);
 
-    // --- 💬 KONSULTASI ---
+    // --- 💬 KONSULTASI & CHAT ---
     Route::post('/consultations', [ConsultationController::class, 'store']);
     Route::get('/consultations', [ConsultationController::class, 'index']);
     Route::put('/consultations/{id}', [ConsultationController::class, 'update']);
+    
+    Route::post('/chat/send', [ChatController::class, 'send']);
+    Route::get('/chat/{userId}', [ChatController::class, 'conversation']);
 
-    // --- 🔐 ADMIN ONLY AREA ---
+    // --- 💳 TRANSAKSI ---
+    Route::post('/transactions', [TransactionController::class, 'store']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | 3. ADMIN ONLY AREA
+    |--------------------------------------------------------------------------
+    */
     Route::middleware('admin')->group(function () {
         
-        // Admin Dashboard Stats
+        // Dashboard Stats
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
 
-        // Register Admin Baru
-        Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
-
-        // Management User
+        // Management User & Admin Registration
         Route::apiResource('/admin/users', UserController::class);
+        Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
+        Route::post('/admin/create', [AuthController::class, 'createAdmin']);
 
-            // Management Order
+        // Management Orders & Transactions
         Route::apiResource('/admin/orders', OrderController::class);
-        Route::get('/admin/orders', [OrderController::class, 'index']);
-        Route::put('/admin/orders/{id}', [OrderController::class, 'update']);
+        Route::get('/admin/transactions', [TransactionController::class, 'index']);
 
-        // Catatan: Route Master Data (Medicines/Doctors) sudah di-handle 
-        // di atas oleh apiResource publik agar React gampang memanggilnya.
+        // Health Management (Admin Access)
+        Route::post('/health-categories', [HealthCategoryController::class, 'store']);
+        Route::post('/health-services', [HealthServiceController::class, 'store']);
     });
-
 });
+
+// Admin Login Manual (Jika tidak via AuthController)
+Route::post('/admin/login', [App\Http\Controllers\Api\AdminController::class, 'login']);

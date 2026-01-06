@@ -14,47 +14,48 @@ export default function Medicines() {
   const [selectedCategory, setSelectedCategory] = useState(null); 
   const [activeSubCategory, setActiveSubCategory] = useState("Semua");
   
-  // STATE DATA
-  const [medicines, setMedicines] = useState([]);
+  const [medicines, setMedicines] = useState([]); // Default array kosong
   const [loading, setLoading] = useState(true);
-
-  // STATE CART (Update Terbaru Disini)
   const [cartStats, setCartStats] = useState({ totalItem: 0, totalPrice: 0 });
 
-  // 1. FETCH DATA OBAT & KERANJANG
   useEffect(() => {
     fetchMedicines();
-    fetchCartData(); // <-- Ambil data keranjang pas loading awal
+    fetchCartData();
   }, []);
 
   const fetchMedicines = async () => {
     try {
         const response = await fetch('http://127.0.0.1:8000/api/medicines');
         if (!response.ok) throw new Error('Gagal ambil data');
-        const data = await response.json();
-        setMedicines(data); 
+        const result = await response.json();
+        
+        // 🔥 PERBAIKAN DI SINI: Deteksi struktur data backend
+        // Jika result adalah array, pakai langsung. Jika punya property 'data', ambil 'data'-nya.
+        const finalData = Array.isArray(result) ? result : (result.data || []);
+        setMedicines(finalData); 
     } catch (err) {
         console.error("Error:", err);
+        setMedicines([]); // Antisipasi error agar tidak crash
     } finally {
         setLoading(false);
     }
   };
 
-  // FUNGSI HITUNG TOTAL KERANJANG (BARU) 💰
   const fetchCartData = async () => {
       const token = localStorage.getItem('token');
-      if (!token) return; // Kalau belum login, gak usah hitung
+      if (!token) return;
 
       try {
           const response = await fetch('http://127.0.0.1:8000/api/carts', {
               headers: { 'Authorization': `Bearer ${token}` }
           });
           if (response.ok) {
-              const data = await response.json();
+              const result = await response.json();
+              // 🔥 Sama seperti medicines, cek apakah data dibungkus property 'data'
+              const cartData = Array.isArray(result) ? result : (result.data || []);
               
-              // Hitung Total Item & Total Harga
-              const totalItem = data.reduce((acc, item) => acc + item.quantity, 0);
-              const totalPrice = data.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+              const totalItem = cartData.reduce((acc, item) => acc + (item.quantity || 0), 0);
+              const totalPrice = cartData.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0);
               
               setCartStats({ totalItem, totalPrice });
           }
@@ -63,10 +64,8 @@ export default function Medicines() {
       }
   };
 
-  // 2. FUNGSI ADD TO CART
   const handleAddToCart = async (medicineId) => {
     const token = localStorage.getItem('token');
-    
     if (!token) {
         alert("Silakan login terlebih dahulu untuk belanja!");
         navigate('/login');
@@ -84,18 +83,15 @@ export default function Medicines() {
         });
 
         if (response.ok) {
-            // alert("Berhasil masuk keranjang! 🛒"); // <-- Alert dimatiin aja biar gak ganggu (optional)
-            fetchCartData(); // <-- UPDATE ANGKA DUIT LANGSUNG!
+            fetchCartData();
         } else {
             alert("Gagal menambahkan ke keranjang.");
         }
-
     } catch (error) {
         console.error("Error add to cart:", error);
     }
   };
 
-  // KATEGORI (Sama kayak sebelumnya)
   const categories = [
     { name: 'Obat Cair', icon: <Droplets />, sub: ['Batuk', 'Flu', 'Demam', 'Maag'] },
     { name: 'Tablet', icon: <Pill />, sub: ['Sakit Kepala', 'Nyeri', 'Diare', 'Tidur'] },
@@ -106,29 +102,28 @@ export default function Medicines() {
     { name: 'Herbal', icon: <Leaf />, sub: ['Masuk Angin', 'Minyak Kayu Putih'] },
   ];
 
-  // FILTER LOGIC
-  const displayedProducts = medicines.filter(item => {
-    if (selectedCategory && item.category !== selectedCategory.name) return false;
+  // 🔥 FILTER LOGIC dengan Optional Chaining agar tidak error jika field null
+  const displayedProducts = (medicines || []).filter(item => {
+    const name = item?.name || item?.nama_obat || "";
+    const description = item?.description || "";
+    const category = item?.category || "";
+
+    if (selectedCategory && category !== selectedCategory.name) return false;
+    
     if (activeSubCategory !== "Semua") {
         const keyword = activeSubCategory.toLowerCase();
-        const itemName = item.name.toLowerCase();
-        const itemDesc = item.description.toLowerCase();
-        if (!itemName.includes(keyword) && !itemDesc.includes(keyword)) return false;
+        if (!name.toLowerCase().includes(keyword) && !description.toLowerCase().includes(keyword)) return false;
     }
-    return item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8fafc', fontFamily: '"Inter", sans-serif' }}>
-      
-      {/* HEADER FIXED */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 999, background: 'white', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <Header />
       </div>
 
       <div className="container" style={{ flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '30px 20px', paddingTop: '100px', paddingBottom: '80px' }}>
-        
-        {/* SEARCH BAR */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 15px', background: 'white' }}>
                 <Search color="#94a3b8" size={20} />
@@ -137,12 +132,9 @@ export default function Medicines() {
             <button style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '0 30px', fontWeight: 'bold', cursor: 'pointer' }}>Cari</button>
         </div>
 
-        {/* LOADING & CONTENT */}
         {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '50px', color: '#0ea5e9' }}><Loader2 className="animate-spin" size={40} /></div>
         ) : !selectedCategory ? (
-          
-          /* === MENU UTAMA === */
           <div>
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#334155' }}>Belanja sesuai Kategori</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '20px' }}>
@@ -155,8 +147,6 @@ export default function Medicines() {
             </div>
           </div>
         ) : (
-          
-        /* === DETAIL KATEGORI === */
           <div style={{ display: 'flex', gap: '30px', alignItems: 'start', flexDirection: 'column' }}>
              <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                  <button onClick={() => setSelectedCategory(null)} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 'bold', padding: 0 }}><ArrowLeft size={18} /> Kembali</button>
@@ -164,7 +154,7 @@ export default function Medicines() {
              </div>
 
              <div style={{ display: 'flex', gap: '30px', width: '100%', alignItems: 'start' }}>
-                <div className="hidden-mobile" style={{ width: '200px', flexShrink: 0, background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+                <div style={{ width: '200px', flexShrink: 0, background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
                     <p style={{ fontWeight: 'bold', fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>FILTER</p>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         <li onClick={() => setActiveSubCategory("Semua")} style={{ padding: '10px', cursor: 'pointer', borderRadius: '6px', fontSize: '14px', marginBottom: '5px', background: activeSubCategory === "Semua" ? '#0ea5e9' : 'transparent', color: activeSubCategory === "Semua" ? 'white' : '#475569', fontWeight: activeSubCategory === "Semua" ? 'bold' : 'normal', transition: '0.2s' }}>Semua</li>
@@ -180,26 +170,18 @@ export default function Medicines() {
                             {displayedProducts.map((item) => (
                                 <div key={item.id} style={{ background: 'white', borderRadius: '12px', padding: '15px', border: '1px solid #e2e8f0', cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                     <div style={{ height: '140px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#fff', borderRadius: '8px', marginBottom: '15px', overflow: 'hidden' }}>
-                                        <img src={item.image.startsWith('http') ? item.image : `http://127.0.0.1:8000${item.image}`} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Image" }} />
+                                        <img src={item?.image?.startsWith('http') ? item.image : `http://127.0.0.1:8000${item?.image || ""}`} alt={item?.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Image" }} />
                                     </div>
                                     <div>
-                                        <h4 style={{ fontSize: '15px', margin: '0 0 5px 0', height: '40px', overflow: 'hidden', lineHeight: '1.4', color: '#334155' }}>{item.name}</h4>
-                                        <span style={{ fontWeight: 'bold', color: '#0f172a', display: 'block', marginBottom: '10px', fontSize: '16px' }}>Rp {item.price.toLocaleString('id-ID')}</span>
-                                        
-                                        <button 
-                                            onClick={() => handleAddToCart(item.id)}
-                                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #0ea5e9', background: 'white', color: '#0ea5e9', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
-                                            onMouseOver={(e) => { e.currentTarget.style.background = '#0ea5e9'; e.currentTarget.style.color = 'white'; }}
-                                            onMouseOut={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#0ea5e9'; }}
-                                        >
-                                            + Keranjang
-                                        </button>
+                                        <h4 style={{ fontSize: '15px', margin: '0 0 5px 0', height: '40px', overflow: 'hidden', lineHeight: '1.4', color: '#334155' }}>{item?.name || item?.nama_obat}</h4>
+                                        <span style={{ fontWeight: 'bold', color: '#0f172a', display: 'block', marginBottom: '10px', fontSize: '16px' }}>Rp {(item?.price || 0).toLocaleString('id-ID')}</span>
+                                        <button onClick={(e) => { e.stopPropagation(); handleAddToCart(item.id); }} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #0ea5e9', background: 'white', color: '#0ea5e9', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>+ Keranjang</button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', background: 'white', borderRadius: '12px', border: '1px dashed #cbd5e1' }}><p style={{color: '#64748b', fontSize: '16px'}}>Produk tidak ditemukan.</p></div>
+                        <div style={{ textAlign: 'center', padding: '50px', background: 'white', borderRadius: '12px', border: '1px dashed #cbd5e1' }}><p style={{color: '#64748b', fontSize: '16px'}}>Produk tidak ditemukan.</p></div>
                     )}
                 </div>
              </div>
@@ -207,25 +189,15 @@ export default function Medicines() {
         )}
       </div>
 
-      {/* === FLOATING CART BAR (YANG INI UDAH PINTAR) === */}
-      {/* Hanya muncul kalau ada barang di keranjang */}
       {cartStats.totalItem > 0 && (
           <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#1e293b', padding: '15px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', color: 'white', zIndex: 100 }}>
                 <div>
                     <span style={{ fontSize: '12px', opacity: 0.8, display: 'block' }}>Total Belanja ({cartStats.totalItem} Barang)</span>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fbbf24', marginTop: '2px' }}>
-                        Rp {cartStats.totalPrice.toLocaleString('id-ID')}
-                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fbbf24', marginTop: '2px' }}>Rp {cartStats.totalPrice.toLocaleString('id-ID')}</div>
                 </div>
-                <button 
-                    onClick={() => navigate('/cart')} 
-                    style={{ background: '#0ea5e9', color: 'white', border: 'none', padding: '12px 30px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', gap: '10px', alignItems: 'center' }}
-                >
-                    <ShoppingCart size={18} /> Lihat Keranjang
-                </button>
+                <button onClick={() => navigate('/cart')} style={{ background: '#0ea5e9', color: 'white', border: 'none', padding: '12px 30px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', gap: '10px', alignItems: 'center' }}><ShoppingCart size={18} /> Lihat Keranjang</button>
           </div>
       )}
-
       <Footer />
     </div>
   );
