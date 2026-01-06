@@ -12,12 +12,17 @@ import Cart from './pages/Cart';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 
+// --- PAGES DOCTOR ---
+import DoctorHome from './pages/doctor/DoctorHome';
+
+
+
 // --- LAYOUT & ADMIN PAGES ---
 import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import AdminArticles from './pages/admin/AdminArticles';
 import AdminArticleCreate from './pages/admin/AdminArticleCreate';
-import AdminDoctors from './pages/admin/AdminDoctors'; // 👈 1. TAMBAH IMPORT INI
+import AdminDoctors from './pages/admin/AdminDoctors';
 import AdminDoctorCreate from './pages/admin/AdminDoctorCreate';
 import AdminDoctorEdit from './pages/admin/AdminDoctorEdit';
 import AdminMedicines from './pages/admin/AdminMedicines';
@@ -31,6 +36,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Home />} />
         <Route path="/doctors" element={<Doctors />} />
@@ -43,30 +49,31 @@ export default function App() {
         <Route path="/articles" element={<Articles />} />
         <Route path="/articles/:id" element={<ArticleDetail />} />
 
+        {/* DOCTOR ROUTES */}
+        <Route path="/doctor" element={<DoctorHome />} />
+
         {/* ADMIN ROUTES */}
         <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            
-            {/* Module Articles */}
-            <Route path="articles" element={<AdminArticles />} />
-            <Route path="articles/create" element={<AdminArticleCreate />} />
-            
-            {/* Module Doctors */}
-            <Route path="doctors" element={<AdminDoctors />} />       {/* 👈 2. TAMBAH ROUTE LIST DOKTER */}
-            <Route path="doctors/create" element={<AdminDoctorCreate />} />
-            <Route path="doctors/edit/:id" element={<AdminDoctorEdit />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          
+          {/* Module Articles */}
+          <Route path="articles" element={<AdminArticles />} />
+          <Route path="articles/create" element={<AdminArticleCreate />} />
+          
+          {/* Module Doctors */}
+          <Route path="doctors" element={<AdminDoctors />} />
+          <Route path="doctors/create" element={<AdminDoctorCreate />} />
+          <Route path="doctors/edit/:id" element={<AdminDoctorEdit />} />
 
-            {/* Module Medicines */}
-            <Route path="medicines" element={<AdminMedicines />} />
-            <Route path="medicines/create" element={<AdminMedicineCreate />} />
-            <Route path="medicines/edit/:id" element={<AdminMedicineEdit />} />
+          {/* Module Medicines */}
+          <Route path="medicines" element={<AdminMedicines />} />
+          <Route path="medicines/create" element={<AdminMedicineCreate />} />
+          <Route path="medicines/edit/:id" element={<AdminMedicineEdit />} />
 
-            {/* Module Users */}
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="bookings" element={<AdminBookings />} />
-            <Route path="orders" element={<AdminOrders />} />
-        
-            
+          {/* Module Users */}
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="bookings" element={<AdminBookings />} />
+          <Route path="orders" element={<AdminOrders />} />
         </Route>
 
       </Routes>
