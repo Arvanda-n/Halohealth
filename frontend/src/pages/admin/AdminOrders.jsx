@@ -1,116 +1,114 @@
-import { useState, useEffect } from 'react';
-import { ShoppingCart, Eye, CheckCircle, Truck, Package, XCircle, Clock, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { SidebarAdmin } from '../../components/sidebar';
+import { Users, Trash2, Search, Mail, Calendar, Shield } from 'lucide-react';
 
-export default function AdminOrders() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function AdminUsers() {
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  // 1. FETCH DATA DARI DATABASE
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/admin/orders', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      const result = await response.json();
-      setOrders(result.data || []);
-    } catch (error) {
-      console.error("Gagal ambil order:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
-  useEffect(() => { fetchOrders(); }, []);
+    const fetchUsers = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            // Pastikan URL backend benar
+            const res = await fetch('http://127.0.0.1:8000/api/admin/users', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setUsers(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Gagal ambil user:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  // 2. UPDATE STATUS LOGIC
-  const handleStatusChange = async (id, newStatus) => {
-    if(!confirm(`Ubah status jadi ${newStatus}?`)) return;
-    try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/orders/${id}`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}` 
-            },
-            body: JSON.stringify({ status: newStatus })
-        });
-        if(res.ok) fetchOrders(); // Refresh data
-    } catch (error) { alert("Gagal update"); }
-  };
+    // --- STYLES (Biar Rapi Tanpa Tailwind) ---
+    const styles = {
+        container: { display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: '"Inter", sans-serif' },
+        main: { flex: 1, padding: '40px', marginLeft: '260px' }, // Margin buat sidebar
+        header: { marginBottom: '30px' },
+        title: { fontSize: '24px', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' },
+        
+        card: { background: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', overflow: 'hidden', border: '1px solid #e2e8f0' },
+        table: { width: '100%', borderCollapse: 'collapse' },
+        thead: { background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' },
+        th: { padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' },
+        tr: { borderBottom: '1px solid #f1f5f9', transition: '0.2s' },
+        td: { padding: '16px 24px', fontSize: '14px', color: '#334155' },
+        
+        badge: (role) => ({
+            background: role === 'admin' ? '#fee2e2' : '#e0f2fe',
+            color: role === 'admin' ? '#991b1b' : '#075985',
+            padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold', textTransform: 'capitalize'
+        }),
+        
+        emptyState: { padding: '50px', textAlign: 'center', color: '#94a3b8' }
+    };
 
-  const getStatusColor = (status) => {
-    if(status === 'completed') return { bg:'#dcfce7', text:'#16a34a', icon: <CheckCircle size={14}/> };
-    if(status === 'process') return { bg:'#e0f2fe', text:'#0284c7', icon: <Truck size={14}/> };
-    if(status === 'cancelled') return { bg:'#fee2e2', text:'#ef4444', icon: <XCircle size={14}/> };
-    return { bg:'#fff7ed', text:'#ea580c', icon: <Clock size={14}/> };
-  };
+    return (
+        <div style={styles.container}>
+            <SidebarAdmin />
+            
+            <div style={styles.main}>
+                <div style={styles.header}>
+                    <h1 style={styles.title}>
+                        <Users size={28} color="#0ea5e9" /> Data Pengguna
+                    </h1>
+                    <p style={{ color: '#64748b', marginTop: '5px' }}>Daftar semua pengguna terdaftar di aplikasi.</p>
+                </div>
 
-  return (
-    <div>
-      <div style={{ marginBottom:'24px' }}>
-        <h1 style={{ fontSize:'24px', fontWeight:'bold', color:'#1e293b' }}>Pesanan Masuk</h1>
-        <p style={{ color:'#64748b' }}>Realtime data transaksi dari database.</p>
-      </div>
-
-      <div style={{ background:'white', borderRadius:'12px', overflow:'hidden', boxShadow:'0 4px 6px rgba(0,0,0,0.05)' }}>
-        {loading ? (
-            <div style={{ padding:'40px', textAlign:'center' }}><Loader2 className="animate-spin" style={{margin:'0 auto'}}/></div>
-        ) : (
-            <table style={{ width:'100%', borderCollapse:'collapse', textAlign:'left' }}>
-                <thead style={{ background:'#f8fafc', borderBottom:'1px solid #e2e8f0' }}>
-                    <tr>
-                        <th style={{ padding:'16px', color:'#64748b' }}>Invoice</th>
-                        <th style={{ padding:'16px', color:'#64748b' }}>Pembeli</th>
-                        <th style={{ padding:'16px', color:'#64748b' }}>Items (Note)</th>
-                        <th style={{ padding:'16px', color:'#64748b' }}>Total</th>
-                        <th style={{ padding:'16px', color:'#64748b' }}>Status</th>
-                        <th style={{ padding:'16px', color:'#64748b', textAlign:'center' }}>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {orders.length > 0 ? orders.map((order) => {
-                        const style = getStatusColor(order.status);
-                        return (
-                            <tr key={order.id} style={{ borderBottom:'1px solid #f1f5f9' }}>
-                                <td style={{ padding:'16px', fontWeight:'bold', color:'#1e293b', fontSize:'13px' }}>{order.invoice_code}</td>
-                                <td style={{ padding:'16px' }}>
-                                    <div style={{ fontWeight:'600' }}>{order.user?.name || 'Unknown'}</div>
-                                    <div style={{ fontSize:'12px', color:'#94a3b8' }}>{new Date(order.created_at).toLocaleDateString('id-ID')}</div>
-                                </td>
-                                <td style={{ padding:'16px', color:'#64748b', maxWidth:'200px' }}>
-                                    <div style={{display:'flex', alignItems:'center', gap:'5px', fontSize:'13px'}}>
-                                        <Package size={14}/> {order.note || 'No Detail'}
-                                    </div>
-                                </td>
-                                <td style={{ padding:'16px', fontWeight:'bold', color:'#0ea5e9' }}>
-                                    Rp {order.total_price.toLocaleString('id-ID')}
-                                </td>
-                                <td style={{ padding:'16px' }}>
-                                    <span style={{ background: style.bg, color: style.text, padding:'4px 10px', borderRadius:'20px', fontSize:'11px', fontWeight:'bold', textTransform:'uppercase', display:'inline-flex', alignItems:'center', gap:'4px' }}>
-                                        {style.icon} {order.status}
-                                    </span>
-                                </td>
-                                <td style={{ padding:'16px', textAlign:'center' }}>
-                                    <select 
-                                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                        value={order.status}
-                                        style={{ padding:'6px', borderRadius:'6px', border:'1px solid #e2e8f0', fontSize:'12px', cursor:'pointer' }}
-                                    >
-                                        <option value="pending">Pending</option>
-                                        <option value="process">Proses</option>
-                                        <option value="completed">Selesai</option>
-                                        <option value="cancelled">Batal</option>
-                                    </select>
-                                </td>
+                <div style={styles.card}>
+                    <table style={styles.table}>
+                        <thead style={styles.thead}>
+                            <tr>
+                                <th style={styles.th}>Nama Lengkap</th>
+                                <th style={styles.th}>Email</th>
+                                <th style={styles.th}>Role</th>
+                                <th style={styles.th}>Tanggal Daftar</th>
                             </tr>
-                        );
-                    }) : (
-                        <tr><td colSpan="6" style={{ padding:'30px', textAlign:'center', color:'#94a3b8' }}>Belum ada pesanan masuk.</td></tr>
-                    )}
-                </tbody>
-            </table>
-        )}
-      </div>
-    </div>
-  );
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan="4" style={styles.emptyState}>Memuat data...</td></tr>
+                            ) : users.length > 0 ? (
+                                users.map((u, i) => (
+                                    <tr key={u.id} style={{ ...styles.tr, background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                                        <td style={{ ...styles.td, fontWeight: 'bold' }}>{u.name}</td>
+                                        <td style={styles.td}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Mail size={14} color="#94a3b8" /> {u.email}
+                                            </div>
+                                        </td>
+                                        <td style={styles.td}>
+                                            <span style={styles.badge(u.role)}>
+                                                {u.role || 'Pasien'}
+                                            </span>
+                                        </td>
+                                        <td style={styles.td}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Calendar size={14} color="#94a3b8" />
+                                                {new Date(u.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" style={styles.emptyState}>
+                                        <Shield size={40} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
+                                        <p>Belum ada user lain selain Admin.</p>
+                                        <small>Coba register akun baru di halaman depan.</small>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
 }

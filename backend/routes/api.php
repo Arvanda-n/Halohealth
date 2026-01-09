@@ -68,8 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chat/send', [ChatController::class, 'send']);
     Route::get('/chat/{userId}', [ChatController::class, 'conversation']);
 
-    // --- 💳 TRANSAKSI ---
+    // --- 💳 TRANSAKSI (USER) ---
     Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::get('/transactions/history', [TransactionController::class, 'history']); // Fitur History User
 
     /*
     |--------------------------------------------------------------------------
@@ -81,14 +82,28 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard Stats
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
 
-        // Management User & Admin Registration
-        Route::apiResource('/admin/users', UserController::class);
+        // --- MANAGEMENT USER ---
+        // Override index user agar bisa filter admin vs patient
+        // (Pastikan method indexAdmin ada di UserController)
+        Route::get('/admin/users', [UserController::class, 'indexAdmin']); 
+        Route::apiResource('/admin/users', UserController::class); // Fallback resource
+        
         Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
         Route::post('/admin/create', [AuthController::class, 'createAdmin']);
 
-        // Management Orders & Transactions
-        Route::apiResource('/admin/orders', OrderController::class);
+        // --- TRANSAKSI & BOOKING (PENTING!) ---
+        
+        // 1. Verifikasi Pembayaran (Update Status: Pending -> Success)
+        Route::put('/admin/transactions/{id}', [TransactionController::class, 'update']);
+        
+        // 2. Booking Dokter (Ambil dari transaksi yang sudah sukses)
+        Route::get('/admin/bookings', [TransactionController::class, 'bookings']);
+        
+        // 3. List Semua Transaksi
         Route::get('/admin/transactions', [TransactionController::class, 'index']);
+
+        // --- MANAGEMENT LAINNYA ---
+        Route::apiResource('/admin/orders', OrderController::class);
 
         // Health Management (Admin Access)
         Route::post('/health-categories', [HealthCategoryController::class, 'store']);

@@ -12,10 +12,12 @@ import {
   ChevronRight,
   Home as HomeIcon,
   MessageCircle,
-  Clock
+  Clock,
+  CreditCard // Icon baru buat Transaksi
 } from 'lucide-react';
 
-// === 1. SIDEBAR KHUSUS ADMIN (Tampilan Baru) ===
+// === 1. SIDEBAR KHUSUS ADMIN ===
+// (Harus pakai "export" biasa, bukan default)
 export function SidebarAdmin() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +35,8 @@ export function SidebarAdmin() {
     ]},
     { group: "TRANSAKSI", items: [
       { name: 'Pesanan Obat', icon: <ShoppingCart size={20} />, path: '/admin/orders' },
+      // 🔥 MENU PENTING BUAT VERIFIKASI PEMBAYARAN
+      { name: 'Verifikasi Bayar', icon: <CreditCard size={20} />, path: '/admin/transactions' },
       { name: 'Booking Dokter', icon: <CalendarCheck size={20} />, path: '/admin/bookings' },
     ]},
     { group: "USER MANAGEMENT", items: [
@@ -48,12 +52,16 @@ export function SidebarAdmin() {
   };
 
   return (
-    <div style={{ width: '260px', height: '100vh', background: 'white', borderRight: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', position: 'fixed', left: 0, top: 0 }}>
+    <div style={{ width: '260px', height: '100vh', background: 'white', borderRight: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', position: 'fixed', left: 0, top: 0, zIndex: 50 }}>
+      {/* HEADER SIDEBAR */}
       <div style={{ padding: '30px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ background: activeColor, padding: '8px', borderRadius: '10px', color: 'white' }}><Stethoscope size={24} /></div>
-        <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>HaloHealth</h2>
+        <div style={{ background: activeColor, padding: '8px', borderRadius: '10px', color: 'white' }}>
+            <Stethoscope size={24} />
+        </div>
+        <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>HaloHealth</h2>
       </div>
 
+      {/* LIST MENU */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
         {menuItems.map((group, idx) => (
           <div key={idx} style={{ marginBottom: '20px' }}>
@@ -62,7 +70,10 @@ export function SidebarAdmin() {
               const isActive = location.pathname.startsWith(item.path);
               return (
                 <Link key={item.name} to={item.path} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: '10px', textDecoration: 'none', color: isActive ? activeColor : inactiveColor, background: isActive ? '#f0f9ff' : 'transparent', marginBottom: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>{item.icon} <span style={{ fontSize: '14px', fontWeight: isActive ? '700' : '500' }}>{item.name}</span></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {item.icon} 
+                    <span style={{ fontSize: '14px', fontWeight: isActive ? '700' : '500' }}>{item.name}</span>
+                  </div>
                   {isActive && <ChevronRight size={14} />}
                 </Link>
               );
@@ -71,6 +82,7 @@ export function SidebarAdmin() {
         ))}
       </div>
 
+      {/* FOOTER LOGOUT */}
       <div style={{ padding: '20px 16px', borderTop: '1px solid #f1f5f9' }}>
         <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', border: 'none', background: '#fff1f2', color: '#e11d48', cursor: 'pointer', fontWeight: '600' }}>
           <LogOut size={20} /> Logout
@@ -81,6 +93,7 @@ export function SidebarAdmin() {
 }
 
 // === 2. SIDEBAR BIASA (USER) ===
+// (Ini Default Export, dipakai di halaman User)
 export default function Sidebar() {
   const location = useLocation();
   return (

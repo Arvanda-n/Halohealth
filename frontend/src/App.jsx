@@ -11,6 +11,12 @@ import BookingCheckout from './pages/BookingCheckout';
 import Cart from './pages/Cart'; 
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
+import Chat from './pages/Chat';
+import PaymentSuccess from './pages/PaymentSucces';
+import Consultation from './pages/Consultation';
+import PaymentReceipt from './pages/PaymentReceipt'
+import Profile from './pages/Profile' 
+
 
 // --- LAYOUT & ADMIN PAGES ---
 import AdminLayout from './layouts/AdminLayout';
@@ -26,6 +32,7 @@ import AdminMedicineEdit from './pages/admin/AdminMedicineEdit';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminTransaction from './pages/admin/AdminTransaction';
 
 export default function App() {
   return (
@@ -42,6 +49,11 @@ export default function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/articles" element={<Articles />} />
         <Route path="/articles/:id" element={<ArticleDetail />} />
+        <Route path="/chat/:receiverId" element={<Chat />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/consultation" element={<Consultation />} />
+        <Route path="/payment-receipt" element={<PaymentReceipt />} />
+        <Route path="/profile" element={<Profile />} />
 
         {/* ADMIN ROUTES */}
         <Route path="/admin" element={<AdminLayout />}>
@@ -65,7 +77,9 @@ export default function App() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="bookings" element={<AdminBookings />} />
             <Route path="orders" element={<AdminOrders />} />
-        
+
+            {/* Module Transactions */}
+            <Route path="transactions" element={<AdminTransaction />} />        
             
         </Route>
 
