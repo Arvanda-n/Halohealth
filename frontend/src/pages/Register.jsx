@@ -1,153 +1,165 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Stethoscope, User, Smartphone, Lock, ChevronRight, CheckCircle } from 'lucide-react';
+import { User, Smartphone, Lock, CheckCircle, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react';
 
 export default function Register() {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  // FILTER INPUT ANGKA SAJA (Sama kayak Login)
-  const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    if (/^[0-9]*$/.test(value)) setPhone(value);
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
+    const navigate = useNavigate();
     
-    // Validasi Password Cocok Gak?
-    if (password !== confirmPassword) {
-        setMessage('❌ Password dan Konfirmasi tidak sama!');
-        return;
-    }
+    const [formData, setFormData] = useState({
+        name: '',
+        phone: '', 
+        password: '',
+        password_confirmation: '',
+        role: 'patient'
+    });
 
-    setLoading(true);
-    setMessage('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            name: name,
-            phone: phone,
-            password: password,
-            password_confirmation: confirmPassword,
-            role: 'patient' // Default daftar sebagai Pasien
-        }),
-      });
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-      const data = await response.json();
+    const handlePhoneChange = (e) => {
+        const value = e.target.value;
+        if (/^[0-9]*$/.test(value)) {
+            setFormData({ ...formData, phone: value });
+        }
+    };
 
-      if (response.ok) {
-        setMessage('✅ Pendaftaran Berhasil! Silakan Login.');
-        // Jeda 1.5 detik terus lempar ke halaman Login
-        setTimeout(() => navigate('/login'), 1500);
-      } else {
-        // Tampilkan error dari Backend (misal: No HP sudah dipakai)
-        setMessage('❌ ' + (data.message || 'Gagal Mendaftar'));
-      }
-    } catch (error) {
-      setMessage('⚠️ Gagal koneksi ke server');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
 
-  return (
-    <div style={{ 
-        display: 'flex', justifyContent: 'center', alignItems: 'center', 
-        minHeight: '100vh', background: '#f8fafc', fontFamily: 'sans-serif', padding: '20px'
-    }}>
-      
-      <div style={{ 
-          background: 'white', padding: '40px', borderRadius: '20px', 
-          boxShadow: '0 10px 40px rgba(0,0,0,0.08)', width: '100%', maxWidth: '400px',
-          textAlign: 'center'
-      }}>
+        if(formData.password !== formData.password_confirmation) {
+            setError("Password konfirmasi tidak cocok!");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/register', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json' 
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Registrasi Berhasil! Silakan Login.");
+                navigate('/login');
+            } else {
+                setError(data.message || 'Gagal mendaftar. Nomor HP mungkin sudah dipakai.');
+            }
+        } catch (err) {
+            setError('Gagal koneksi. Pastikan Backend menyala!');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- STYLES COMPACT (BIAR GAK SCROLL) ---
+    const s = {
+        container: { 
+            height: '100vh', // Paksa tinggi pas layar
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            background: '#f8fafc', 
+            fontFamily: '"Inter", sans-serif',
+            overflow: 'hidden' // Sembunyikan scroll body
+        },
+        card: { 
+            width: '100%', 
+            maxWidth: '380px', // Sedikit dirampingkan
+            background: 'white', 
+            borderRadius: '20px', 
+            padding: '30px', // Padding dikurangi biar gak tinggi
+            boxShadow: '0 10px 30px -5px rgba(0,0,0,0.05)', 
+            border: '1px solid #f1f5f9' 
+        },
         
-        {/* LOGO */}
-        <div style={{ 
-            width: '60px', height: '60px', background: '#e0f2fe', borderRadius: '50%', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto',
-            color: '#0ea5e9'
-        }}>
-            <Stethoscope size={32} />
-        </div>
+        logoArea: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' },
+        // 🔥 UPDATE: Logo jadi 80px (Pas, gak raksasa)
+        logo: { width: '80px', marginBottom: '10px', objectFit: 'contain' },
+        
+        title: { fontSize: '20px', fontWeight: '800', color: '#1e293b' },
+        subtitle: { color: '#64748b', fontSize: '13px', marginTop: '2px' },
+        
+        // Jarak antar input dipadatkan
+        inputGroup: { marginBottom: '12px' },
+        label: { display: 'block', fontSize: '10px', fontWeight: '700', color: '#475569', marginBottom: '4px', textTransform: 'uppercase' },
+        inputWrapper: { display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 10px', background: '#fff', height: '40px' },
+        input: { width: '100%', border: 'none', outline: 'none', fontSize: '13px', color: '#334155', background: 'transparent' },
+        
+        btn: { width: '100%', height: '42px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '15px' },
+        btnBack: { position: 'absolute', top: '20px', left: '20px', display: 'flex', alignItems: 'center', gap: '5px', textDecoration: 'none', color: '#64748b', fontWeight: '600', fontSize: '13px' },
+        
+        errorBox: { background: '#fee2e2', color: '#991b1b', padding: '10px', borderRadius: '8px', fontSize: '12px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }
+    };
 
-        <h2 style={{ color: '#0f172a', margin: '0 0 5px 0', fontSize: '24px', fontWeight: 'bold' }}>Buat Akun Baru</h2>
-        <p style={{ color: '#64748b', margin: '0 0 25px 0', fontSize: '14px' }}>Gabung HaloHealth untuk hidup lebih sehat</p>
+    return (
+        <div style={s.container}>
+            <Link to="/" style={s.btnBack}><ArrowLeft size={16} /> Home</Link>
 
-        {/* NOTIFIKASI */}
-        {message && <div style={{ 
-            padding: '12px', marginBottom: '20px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
-            background: message.includes('✅') ? '#ecfdf5' : '#fef2f2',
-            color: message.includes('✅') ? '#15803d' : '#b91c1c'
-        }}>{message}</div>}
-
-        <form onSubmit={handleRegister} style={{ textAlign: 'left' }}>
-          
-          {/* 1. NAMA LENGKAP */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>Nama Lengkap</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden', background: 'white' }}>
-                <div style={{ padding: '12px 0 12px 15px', color: '#94a3b8' }}><User size={18} /></div>
-                <input type="text" placeholder="Nama Kamu" value={name} onChange={(e) => setName(e.target.value)} required style={{ border: 'none', outline: 'none', padding: '12px', width: '100%', fontSize: '15px', color: '#1e293b' }} />
-            </div>
-          </div>
-
-          {/* 2. NOMOR PONSEL */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>Nomor Ponsel</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden', background: 'white' }}>
-                <div style={{ background: '#f1f5f9', padding: '12px 15px', color: '#475569', fontWeight: 'bold', fontSize: '14px', borderRight: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                   <Smartphone size={16} /><span>+62</span>
+            <div style={s.card}>
+                <div style={s.logoArea}>
+                    <img src="/images/logo.png" alt="HaloHealth" style={s.logo} />
+                    <h1 style={s.title}>Buat Akun Baru</h1>
+                    <p style={s.subtitle}>Gabung HaloHealth sekarang</p>
                 </div>
-                <input type="text" inputMode="numeric" placeholder="812xxxxx" value={phone} onChange={handlePhoneChange} required style={{ border: 'none', outline: 'none', padding: '12px', width: '100%', fontSize: '15px', color: '#1e293b' }} />
+
+                {error && <div style={s.errorBox}><AlertCircle size={14}/> {error}</div>}
+
+                <form onSubmit={handleRegister}>
+                    <div style={s.inputGroup}>
+                        <label style={s.label}>Nama Lengkap</label>
+                        <div style={s.inputWrapper}>
+                            <User size={16} color="#94a3b8" style={{ marginRight: '8px' }} />
+                            <input name="name" type="text" placeholder="Nama Kamu" style={s.input} onChange={handleChange} required />
+                        </div>
+                    </div>
+
+                    <div style={s.inputGroup}>
+                        <label style={s.label}>Nomor Ponsel</label>
+                        <div style={s.inputWrapper}>
+                            <div style={{ paddingRight: '8px', borderRight: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '4px', marginRight:'8px', fontSize:'13px', fontWeight:'bold', color:'#64748b' }}>
+                               <span>+62</span>
+                            </div>
+                            <input name="phone" type="text" inputMode="numeric" placeholder="812xxxxx" value={formData.phone} onChange={handlePhoneChange} required style={s.input} />
+                        </div>
+                    </div>
+
+                    <div style={s.inputGroup}>
+                        <label style={s.label}>Kata Sandi</label>
+                        <div style={s.inputWrapper}>
+                            <Lock size={16} color="#94a3b8" style={{ marginRight: '8px' }} />
+                            <input name="password" type="password" placeholder="••••••••" style={s.input} onChange={handleChange} required />
+                        </div>
+                    </div>
+
+                    <div style={s.inputGroup}>
+                        <label style={s.label}>Ulangi Kata Sandi</label>
+                        <div style={s.inputWrapper}>
+                            <CheckCircle size={16} color="#94a3b8" style={{ marginRight: '8px' }} />
+                            <input name="password_confirmation" type="password" placeholder="••••••••" style={s.input} onChange={handleChange} required />
+                        </div>
+                    </div>
+
+                    <button type="submit" style={s.btn} disabled={loading}>
+                        {loading ? 'Mendaftar...' : <>Daftar <ArrowRight size={16} /></>}
+                    </button>
+                </form>
+
+                <p style={{ textAlign: 'center', marginTop: '15px', fontSize: '12px', color: '#64748b' }}>
+                    Sudah punya akun? <Link to="/login" style={{ color: '#0ea5e9', fontWeight: 'bold', textDecoration: 'none' }}>Masuk</Link>
+                </p>
             </div>
-          </div>
-
-          {/* 3. PASSWORD */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>Kata Sandi</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden', background: 'white' }}>
-                <div style={{ padding: '12px 0 12px 15px', color: '#94a3b8' }}><Lock size={18} /></div>
-                <input type="password" placeholder="Minimal 8 karakter" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ border: 'none', outline: 'none', padding: '12px', width: '100%', fontSize: '15px', color: '#1e293b' }} />
-            </div>
-          </div>
-
-          {/* 4. KONFIRMASI PASSWORD */}
-          <div style={{ marginBottom: '25px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>Ulangi Kata Sandi</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden', background: 'white' }}>
-                <div style={{ padding: '12px 0 12px 15px', color: '#94a3b8' }}><CheckCircle size={18} /></div>
-                <input type="password" placeholder="Ketik ulang sandi" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required style={{ border: 'none', outline: 'none', padding: '12px', width: '100%', fontSize: '15px', color: '#1e293b' }} />
-            </div>
-          </div>
-
-          {/* TOMBOL DAFTAR */}
-          <button type="submit" disabled={loading} style={{ 
-                width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
-                background: '#0ea5e9', color: 'white', fontWeight: 'bold', fontSize: '16px',
-                cursor: loading ? 'not-allowed' : 'pointer', transition: '0.3s',
-                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.25)'
-            }}>
-            {loading ? 'Mendaftarkan...' : (<>Daftar Sekarang  </>)}
-          </button>
-        </form>
-
-        <p style={{ marginTop: '25px', fontSize: '14px', color: '#64748b' }}>
-           Sudah punya akun? <Link to="/login" style={{ color: '#0ea5e9', fontWeight: 'bold', textDecoration: 'none' }}>Masuk di sini</Link>
-        </p>
-
-      </div>
-    </div>
-  );
+        </div>
+    );
 }
