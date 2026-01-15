@@ -139,12 +139,33 @@ export default function Home() {
 
   const medicineTabs = ['Semua', 'Obat Cair', 'Tablet', 'Vitamin', 'Ibu & Bayi', 'P3K', 'Alat Kesehatan', 'Herbal'];
 
+
+  const specialistCategories = [
+    { name: "Sp. Mata", icon: "eye" }, { name: "Sp. Kulit", icon: "sparkles" },
+    { name: "Sp. Kandungan", icon: "heart-handshake" }, { name: "Sp. THT", icon: "ear" },
+    { name: "Sp. Anak", icon: "baby" }, { name: "Sp. Penyakit Dalam", icon: "activity" }
+  ];
+
+ 
+   const cekSehatTools = [
+  { name: "Cek Stres", icon: "brain-circuit", link: "/cek-stress" },
+  { name: "Kalkulator BMI", icon: "calculator", link: "BMI" },
+  { name: "Risiko Jantung", icon: "heart-pulse", link: "#" },
+  { name: "Risiko Diabetes", icon: "droplet", link: "#" },
+  { name: "Tes Depresi", icon: "frown", link: "#" },
+  { name: "Kalender Haid", icon: "calendar-heart", link: "#" },
+  { name: "Pengingat Obat", icon: "pill", link: "#" },
+  { name: "Kalender Hamil", icon: "baby", link: "#" },
+];
+
+
   const cekSehatTools = [
     { name: "Cek Stres", icon: "brain-circuit" }, { name: "Kalkulator BMI", icon: "calculator" },
     { name: "Risiko Jantung", icon: "heart-pulse" }, { name: "Risiko Diabetes", icon: "droplet" },
     { name: "Tes Depresi", icon: "frown" }, { name: "Kalender Haid", icon: "calendar-heart" },
     { name: "Pengingat Obat", icon: "pill" }, { name: "Kalender Hamil", icon: "baby" }
   ];
+
 
   const testimonials = [
     { text: "Sangat membantu.. malam2 butuh obat, gak perlu keluar rumah!", name: "Sainem W.", role: "Ibu Rumah Tangga" },
@@ -321,18 +342,61 @@ export default function Home() {
 
         {/* 6. CEK KESEHATAN (STATIS) */}
         <section style={{ marginBottom: '60px' }}>
-             <h3 style={sectionTitle}>Cek Kesehatan Mandiri</h3>
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '15px', textAlign:'center' }}>
-                {cekSehatTools.map((tool, i) => (
-                    <div key={i} className="interactive-card" style={{ border:'none', background:'transparent', boxShadow:'none' }}>
-                        <div style={{ width:'60px', height:'60px', background:'#f8fafc', borderRadius:'50%', margin:'0 auto 10px', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                             <img src={`https://unpkg.com/lucide-static@latest/icons/${tool.icon}.svg`} style={{ width: '24px', color: mainBlue }} alt="icon" />
-                        </div>
-                        <span style={{ fontSize:'12px', fontWeight:'500', color:'#555' }}>{tool.name}</span>
-                    </div>
-                ))}
-            </div>
-        </section>
+  <h3 style={sectionTitle}>Cek Kesehatan Mandiri</h3>
+
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(8, 1fr)',
+      gap: '15px',
+      textAlign: 'center'
+    }}
+  >
+    {cekSehatTools.map((tool, i) => (
+      <div
+        key={i}
+        className="interactive-card"
+        onClick={() => navigate(tool.link)}
+        style={{
+          border: 'none',
+          background: 'transparent',
+          boxShadow: 'none',
+          cursor: 'pointer'
+        }}
+      >
+        <div
+          style={{
+            width: '60px',
+            height: '60px',
+            background: '#f8fafc',
+            borderRadius: '50%',
+            margin: '0 auto 10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <img
+            src={`https://unpkg.com/lucide-static@latest/icons/${tool.icon}.svg`}
+            style={{ width: '24px' }}
+            alt="icon"
+          />
+        </div>
+
+        <span
+          style={{
+            fontSize: '12px',
+            fontWeight: '500',
+            color: '#555'
+          }}
+        >
+          {tool.name}
+        </span>
+      </div>
+    ))}
+  </div>
+</section>
+
 
         {/* 7. TESTIMONI (STATIS) */}
         <section style={{ marginBottom: '80px' }}>
