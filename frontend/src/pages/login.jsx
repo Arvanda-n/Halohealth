@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Stethoscope, Smartphone, Lock } from 'lucide-react';
+import { Smartphone, Lock, AlertCircle, ArrowLeft, LogIn } from 'lucide-react';
 
 export default function Login() {
   const [phone, setPhone] = useState('');
@@ -22,15 +22,15 @@ export default function Login() {
     setLoading(true);
     setMessage('');
 
-    console.log("Mengirim data:", { phone, password }); // Cek di Console browser (F12)
-
     try {
-      // Pastikan port 8000 (Laravel)
       const response = await fetch('http://127.0.0.1:8000/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
         body: JSON.stringify({ 
-            phone: phone, // 👈 KIRIM APA ADANYA (JANGAN DITAMBAH 62)
+            phone: phone, 
             password: password 
         }),
       });
@@ -41,8 +41,12 @@ export default function Login() {
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('userInfo', JSON.stringify(data.user));
         
-        setMessage('✅ Login Berhasil!');
-        setTimeout(() => navigate('/'), 1000); 
+        // Cek Role: Admin -> Dashboard, User -> Home
+        if(data.user.role === 'admin') {
+            navigate('/admin/dashboard');
+        } else {
+            navigate('/');
+        }
       } else {
         setMessage('❌ ' + (data.message || 'No HP atau Password Salah'));
       }
@@ -54,106 +58,108 @@ export default function Login() {
     }
   };
 
+  // --- STYLES COMPACT (NO SCROLL) ---
+  const s = {
+    container: { 
+        height: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: '#f8fafc', 
+        fontFamily: '"Inter", sans-serif',
+        overflow: 'hidden'
+    },
+    card: { 
+        width: '100%', 
+        maxWidth: '380px', 
+        background: 'white', 
+        borderRadius: '20px', 
+        padding: '35px', 
+        boxShadow: '0 10px 30px -5px rgba(0,0,0,0.05)', 
+        border: '1px solid #f1f5f9' 
+    },
+    
+    logoArea: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' },
+    // 🔥 UPDATE: Logo Gambar (80px)
+    logo: { width: '80px', marginBottom: '15px', objectFit: 'contain' },
+    
+    title: { fontSize: '22px', fontWeight: '800', color: '#1e293b' },
+    subtitle: { color: '#64748b', fontSize: '13px', marginTop: '2px' },
+
+    inputGroup: { marginBottom: '15px' },
+    label: { display: 'block', fontSize: '11px', fontWeight: '700', color: '#475569', marginBottom: '6px', textTransform: 'uppercase' },
+    inputWrapper: { display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '0 12px', background: '#fff', height: '42px' },
+    input: { width: '100%', border: 'none', outline: 'none', fontSize: '14px', color: '#334155', background: 'transparent' },
+
+    btn: { width: '100%', height: '44px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '20px', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.2)' },
+    
+    btnBack: { position: 'absolute', top: '20px', left: '20px', display: 'flex', alignItems: 'center', gap: '5px', textDecoration: 'none', color: '#64748b', fontWeight: '600', fontSize: '13px' },
+    msgBox: { padding: '10px', marginBottom: '20px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', textAlign: 'center' }
+  };
+
   return (
-    <div style={{ 
-        display: 'flex', justifyContent: 'center', alignItems: 'center', 
-        minHeight: '100vh', background: '#f8fafc', fontFamily: '"Inter", sans-serif'
-    }}>
+    <div style={s.container}>
+      <Link to="/" style={s.btnBack}><ArrowLeft size={16} /> Home</Link>
       
-      <div style={{ 
-          background: 'white', padding: '40px', borderRadius: '24px', 
-          boxShadow: '0 10px 40px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px',
-          textAlign: 'center', border: '1px solid #f1f5f9'
-      }}>
+      <div style={s.card}>
         
-        <div style={{ 
-            width: '70px', height: '70px', background: '#e0f2fe', borderRadius: '50%', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto',
-            color: '#0ea5e9'
-        }}>
-            <Stethoscope size={36} />
+        {/* LOGO AREA */}
+        <div style={s.logoArea}>
+            <img src="/images/logo.png" alt="HaloHealth" style={s.logo} />
+            <h2 style={s.title}>Selamat Datang</h2>
+            <p style={s.subtitle}>Masuk untuk mulai konsultasi</p>
         </div>
 
-        <h2 style={{ color: '#0f172a', margin: '0 0 5px 0', fontSize: '26px', fontWeight: '800' }}>HaloHealth</h2>
-        <p style={{ color: '#64748b', margin: '0 0 30px 0', fontSize: '14px' }}>Masuk untuk konsultasi dokter</p>
-
+        {/* PESAN ERROR/SUKSES */}
         {message && <div style={{ 
-            padding: '12px', marginBottom: '20px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
-            background: message.includes('✅') ? '#ecfdf5' : '#fef2f2',
-            color: message.includes('✅') ? '#15803d' : '#ef4444',
-            textAlign: 'center'
+            ...s.msgBox,
+            background: message.includes('❌') || message.includes('⚠️') ? '#fef2f2' : '#ecfdf5',
+            color: message.includes('❌') || message.includes('⚠️') ? '#ef4444' : '#15803d'
         }}>{message}</div>}
 
-        <form onSubmit={handleLogin} style={{ textAlign: 'left' }}>
+        <form onSubmit={handleLogin}>
           
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>Nomor Ponsel</label>
-            <div style={{ 
-                display: 'flex', alignItems: 'center', 
-                border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden',
-                background: 'white', transition: '0.2s'
-            }}>
-                {/* HAPUS BOX +62 BIAR GAK BINGUNG */}
-                <div style={{ padding: '14px 0 14px 16px', color: '#94a3b8' }}>
-                   <Smartphone size={20} />
+          {/* INPUT HP */}
+          <div style={s.inputGroup}>
+            <label style={s.label}>Nomor Ponsel</label>
+            <div style={s.inputWrapper}>
+                <div style={{ paddingRight: '8px', borderRight: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '4px', marginRight:'8px', fontSize:'13px', fontWeight:'bold', color:'#64748b' }}>
+                    <Smartphone size={16} /><span>+62</span>
                 </div>
-                
                 <input 
                   type="text" 
                   inputMode="numeric" 
-                  // Placeholder disesuaikan biar user tau formatnya
-                  placeholder="Contoh: 8123456789" 
-                  value={phone}
+                  placeholder="812xxxxx" 
+                  value={phone} 
                   onChange={handlePhoneChange} 
-                  style={{ 
-                      border: 'none', outline: 'none', padding: '14px', 
-                      width: '100%', fontSize: '15px', color: '#1e293b', fontWeight: '500'
-                  }}
+                  style={s.input} 
                   required
                 />
             </div>
           </div>
 
-          <div style={{ marginBottom: '30px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>Kata Sandi</label>
-            <div style={{ 
-                display: 'flex', alignItems: 'center', 
-                border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden',
-                background: 'white'
-            }}>
-                <div style={{ padding: '14px 0 14px 16px', color: '#94a3b8' }}>
-                    <Lock size={20} />
-                </div>
+          {/* INPUT PASSWORD */}
+          <div style={s.inputGroup}>
+            <label style={s.label}>Kata Sandi</label>
+            <div style={s.inputWrapper}>
+                <Lock size={16} color="#94a3b8" style={{ marginRight: '10px' }} />
                 <input 
-                    type="password" 
-                    placeholder="Masukkan kata sandi"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ 
-                        border: 'none', outline: 'none', padding: '14px', 
-                        width: '100%', fontSize: '15px', color: '#1e293b', fontWeight: '500'
-                    }}
-                    required
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  style={s.input} 
+                  required
                 />
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={{ 
-                width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
-                background: '#0ea5e9', color: 'white', fontWeight: 'bold', fontSize: '16px',
-                cursor: loading ? 'not-allowed' : 'pointer', transition: '0.3s',
-                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
-            }}
-          >
-            {loading ? 'Memproses...' : 'Masuk Sekarang'}
+          <button type="submit" style={s.btn} disabled={loading}>
+            {loading ? 'Memproses...' : <>Masuk Sekarang <LogIn size={18} /></>}
           </button>
         </form>
 
-        <p style={{ marginTop: '25px', fontSize: '14px', color: '#64748b' }}>
+        <p style={{ marginTop: '20px', fontSize: '13px', color: '#64748b', textAlign: 'center' }}>
            Belum punya akun? <Link to="/register" style={{ color: '#0ea5e9', fontWeight: 'bold', textDecoration: 'none' }}>Daftar</Link>
         </p>
 

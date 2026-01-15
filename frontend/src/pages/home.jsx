@@ -8,16 +8,12 @@ import foto1 from "../assets/foto3.png";
 import foto2 from "../assets/foto2.png"; 
 import foto3 from "../assets/foto4.png"; 
 
-// IMPORT ICONS
+// IMPORT ICONS PNG (Untuk Menu Menu)
 import chatIcon from "../assets/icons/chat.png";
 import tokoIcon from "../assets/icons/toko.png";
-import homecareIcon from "../assets/icons/homecare.png";
-import asuransiIcon from "../assets/icons/asuransi.png";
-import skinIcon from "../assets/icons/haloskin.png";
-import fitIcon from "../assets/icons/halofit.png";
 
-// ICONS LIB
-import { Loader2, User, Calendar } from 'lucide-react';
+// ICONS LIB (Lucide React)
+import { Loader2, User, Calendar, ShieldCheck } from 'lucide-react'; // Tambah ShieldCheck
 
 export default function Home() {
   const navigate = useNavigate();
@@ -33,7 +29,7 @@ export default function Home() {
 
   const banners = [foto1, foto2, foto3];
 
-  // 1. FETCH DATA DARI API (SINKRON DENGAN BACKEND BARU)
+  // 1. FETCH DATA DARI API
   useEffect(() => {
     const fetchData = async () => {
         try {
@@ -41,20 +37,20 @@ export default function Home() {
             const resMed = await fetch('http://127.0.0.1:8000/api/medicines');
             const dataMed = await resMed.json();
             
-            // 🔥 Sinkronisasi: Ambil dari dataMed.data
+            // Sinkronisasi data obat + Randomize
             let finalMed = dataMed.data ? dataMed.data : (Array.isArray(dataMed) ? dataMed : []);
-            
-            // Acak posisi array (Randomizer)
-            finalMed = [...finalMed].sort(() => 0.5 - Math.random());
+            finalMed = [...finalMed].sort(() => 0.5 - Math.random()); 
             setMedicines(finalMed); 
 
             // B. AMBIL ARTIKEL
             const resArt = await fetch('http://127.0.0.1:8000/api/articles');
             const dataArt = await resArt.json();
             
-            // 🔥 Sinkronisasi: Ambil dari dataArt.data
-            const finalArt = dataArt.data ? dataArt.data : (Array.isArray(dataArt) ? dataArt : []);
-            setArticles(finalArt.slice(0, 4));  
+            // Sinkronisasi data artikel + Randomize
+            let finalArt = dataArt.data ? dataArt.data : (Array.isArray(dataArt) ? dataArt : []);
+            finalArt = [...finalArt].sort(() => 0.5 - Math.random()); 
+            
+            setArticles(finalArt.slice(0, 3));  // Ambil 3 artikel acak
 
         } catch (error) {
             console.error("Gagal koneksi ke server:", error);
@@ -69,7 +65,7 @@ export default function Home() {
   // 2. LOGIKA FILTERING OBAT
   const getFilteredMedicines = () => {
     if (activeTab === 'Semua') {
-        return medicines.slice(0, 4);
+        return medicines.slice(0, 5); // Ambil 5 obat
     }
 
     const keywords = {
@@ -95,10 +91,10 @@ export default function Home() {
         return searchTerms.some(term => itemText.includes(term));
     });
 
-    return filtered.slice(0, 4); 
+    return filtered.slice(0, 5); 
   };
 
-  // 3. FUNGSI HELPER GAMBAR (Sesuai perbaikan Admin sebelumnya)
+  // 3. FUNGSI HELPER GAMBAR
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "https://placehold.co/150x150?text=No+Image";
     if (imagePath.startsWith('http')) return imagePath;
@@ -135,17 +131,14 @@ export default function Home() {
     return () => clearInterval(bannerInterval);
   }, [banners.length]);
 
-  // MENU STATIC
+  // DATA STATIC
   const services = [
     { icon: chatIcon, title: "Chat dengan Dokter", subtitle: "Tanya dokter spesialis", link: "/doctors" },
     { icon: tokoIcon, title: "Toko Kesehatan", subtitle: "Cek obat & vitamin", link: "/medicines" },
-    { icon: homecareIcon, title: "Homecare", subtitle: "Medis ke rumah", link: "#" },
-    { icon: asuransiIcon, title: "Asuransi", subtitle: "Hubungkan asuransi", link: "#" },
-    { icon: skinIcon, title: "HaloSkin", subtitle: "Solusi kulit sehat", link: "#" },
-    { icon: fitIcon, title: "HaloFit", subtitle: "Olahraga & diet", link: "#" },
   ];
 
   const medicineTabs = ['Semua', 'Obat Cair', 'Tablet', 'Vitamin', 'Ibu & Bayi', 'P3K', 'Alat Kesehatan', 'Herbal'];
+
 
   const specialistCategories = [
     { name: "Sp. Mata", icon: "eye" }, { name: "Sp. Kulit", icon: "sparkles" },
@@ -164,6 +157,14 @@ export default function Home() {
   { name: "Pengingat Obat", icon: "pill", link: "#" },
   { name: "Kalender Hamil", icon: "baby", link: "#" },
 ];
+
+
+  const cekSehatTools = [
+    { name: "Cek Stres", icon: "brain-circuit" }, { name: "Kalkulator BMI", icon: "calculator" },
+    { name: "Risiko Jantung", icon: "heart-pulse" }, { name: "Risiko Diabetes", icon: "droplet" },
+    { name: "Tes Depresi", icon: "frown" }, { name: "Kalender Haid", icon: "calendar-heart" },
+    { name: "Pengingat Obat", icon: "pill" }, { name: "Kalender Hamil", icon: "baby" }
+  ];
 
 
   const testimonials = [
@@ -185,7 +186,7 @@ export default function Home() {
         .interactive-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.15); border-color: #0ea5e9 !important; }
         .tab-btn { transition: all 0.2s; }
         .tab-btn:hover { background-color: #f1f5f9; }
-        .tab-btn.active { background-color: #0ea5e9; color: white; border-color: #0ea5e9; }
+        .tab-btn.active { background-color: #0ea5e9; color: white; border-color: #0ea5e9; shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.5); }
       `}</style>
 
       <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'white', borderBottom:'1px solid #f1f5f9' }}>
@@ -210,7 +211,7 @@ export default function Home() {
         {/* 2. SOLUSI KESEHATAN */}
         <section style={{ marginBottom: '50px' }}>
             <h3 style={sectionTitle}>Solusi Kesehatan</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
                 {services.map((item, i) => (
                     <div key={i} onClick={() => item.link !== '#' && navigate(item.link)} 
                           className="interactive-card"
@@ -229,10 +230,12 @@ export default function Home() {
             </div>
         </section>
 
-        {/* 3. DIAWASI MEDICAL */}
-        <section style={{ marginBottom: '50px' }}>
+        {/* 3. DIAWASI MEDICAL (REVISI ICON LUCIDE) */}
+        <section style={{ marginBottom: '60px' }}>
              <div style={{ background: '#f0f9ff', borderRadius: '16px', padding: '40px', borderLeft: `6px solid ${mainBlue}`, display: 'flex', alignItems: 'center', gap: '25px' }}>
-                <div style={{ fontSize: '45px' }}>🛡️</div>
+                {/* Gunakan ShieldCheck dari Lucide */}
+                <ShieldCheck size={50} color={mainBlue} />
+                
                 <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0369a1', margin: 0 }}>Diawasi Board of Medical Excellence</h3>
                     <p style={{ margin: '5px 0 0', fontSize: '14px', color: '#334155' }}>Standar medis internasional untuk keamanan dan kenyamanan Anda.</p>
@@ -240,20 +243,7 @@ export default function Home() {
             </div>
         </section>
 
-        {/* 4. SPESIALIS */}
-        <section style={{ marginBottom: '50px' }}>
-            <h3 style={sectionTitle}>Spesialis Tepercaya</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-                {specialistCategories.map((cat, i) => (
-                    <div key={i} className="interactive-card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '12px', background:'white', border:'1px solid #e2e8f0' }}>
-                        <img src={`https://unpkg.com/lucide-static@latest/icons/${cat.icon}.svg`} style={{ width: '24px', color: mainBlue }} alt="icon" />
-                        <span style={{ fontSize: '14px', fontWeight: '600' }}>{cat.name}</span>
-                    </div>
-                ))}
-            </div>
-        </section>
-
-        {/* 5. OBAT & SUPLEMEN */}
+        {/* 4. OBAT & SUPLEMEN */}
         <section style={{ marginBottom: '60px' }}>
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>Obat & Suplemen</h3>
@@ -265,7 +255,7 @@ export default function Home() {
                     <button key={i} 
                         onClick={() => setActiveTab(tab)} 
                         className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
-                        style={{ padding: '8px 20px', borderRadius:'20px', fontSize:'13px', border: '1px solid #eee', fontWeight:'600', cursor:'pointer', whiteSpace: 'nowrap', color: '#555' }}
+                        style={{ padding: '8px 20px', borderRadius:'20px', fontSize:'13px', border: '1px solid #eee', fontWeight:'600', cursor:'pointer', whiteSpace: 'nowrap', color: activeTab === tab ? 'white' : '#555', boxShadow: activeTab === tab ? '0 4px 10px rgba(14, 165, 233, 0.3)' : 'none' }}
                     >
                         {tab}
                     </button>
@@ -275,7 +265,7 @@ export default function Home() {
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '30px' }}><Loader2 className="animate-spin" /></div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px' }}> 
                     {getFilteredMedicines().length > 0 ? (
                         getFilteredMedicines().map((prod) => (
                             <div key={prod.id} className="interactive-card" style={{ borderRadius: '12px', padding: '15px', background:'white', border:'1px solid #e2e8f0', display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
@@ -292,7 +282,7 @@ export default function Home() {
                                     <p style={{ color: mainBlue, fontWeight: 'bold', fontSize: '14px' }}>Rp {prod.price?.toLocaleString('id-ID')}</p>
                                     <button 
                                         onClick={() => handleAddToCart(prod.id)}
-                                        style={{ width: '100%', marginTop:'10px', padding: '8px', background: 'white', border: `1px solid ${mainBlue}`, color: mainBlue, borderRadius: '8px', fontSize:'12px', fontWeight:'bold', cursor:'pointer' }}
+                                        style={{ width: '100%', marginTop:'10px', padding: '8px', background: activeTab === 'Obat Cair' ? mainBlue : mainBlue, border: 'none', color: 'white', borderRadius: '8px', fontSize:'12px', fontWeight:'bold', cursor:'pointer', boxShadow: '0 4px 6px rgba(14, 165, 233, 0.2)' }}
                                     >
                                         + Keranjang
                                     </button>
@@ -309,7 +299,7 @@ export default function Home() {
             )}
         </section>
 
-        {/* 6. ARTIKEL KESEHATAN */}
+        {/* 5. ARTIKEL KESEHATAN */}
         <section style={{ marginBottom: '60px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>Artikel Kesehatan</h3>
@@ -319,28 +309,28 @@ export default function Home() {
             {loading ? (
                  <div style={{ textAlign: 'center', padding: '30px' }}><Loader2 className="animate-spin" /></div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '25px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px' }}>
                     {articles.map((art) => (
-                        <div key={art.id} onClick={() => navigate('/articles')} className="article-card interactive-card" style={{ display: 'flex', gap: '20px', borderRadius:'12px', padding:'0', overflow:'hidden', border:'none', cursor:'pointer', background: 'white' }}>
+                        <div key={art.id} onClick={() => navigate(`/article/${art.id}`)} className="article-card interactive-card" style={{ borderRadius:'12px', overflow:'hidden', border:'1px solid #e2e8f0', cursor:'pointer', background: 'white', display:'flex', flexDirection:'column' }}>
                             <img 
                                 src={getImageUrl(art.thumbnail || art.image)} 
-                                style={{ width: '120px', height: '120px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0 }} 
+                                style={{ width: '100%', height: '180px', objectFit: 'cover' }} 
                                 alt="article"
                                 onError={(e) => e.target.src = "https://placehold.co/150x150?text=Artikel"}
                             />
-                            <div style={{ padding:'5px 0', flex: 1 }}>
-                                <div style={{ marginBottom: '5px' }}>
-                                    <span style={{ fontSize: '10px', background: '#e0f2fe', color: mainBlue, padding: '3px 8px', borderRadius: '4px', fontWeight:'bold', textTransform: 'uppercase' }}>
+                            <div style={{ padding:'20px', flex: 1, display:'flex', flexDirection:'column' }}>
+                                <div style={{ marginBottom: '10px' }}>
+                                    <span style={{ fontSize: '11px', background: '#e0f2fe', color: mainBlue, padding: '4px 10px', borderRadius: '4px', fontWeight:'bold', textTransform: 'uppercase' }}>
                                         {art.category || 'Umum'}
                                     </span>
                                 </div>
-                                <h4 className="article-title" style={{ margin: '0 0 8px', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.4', color:'#333' }}>
+                                <h4 className="article-title" style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: 'bold', lineHeight: '1.4', color:'#333', flex:1 }}>
                                     {art.title}
                                 </h4>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', color: '#94a3b8' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><User size={11} /> {art.author || 'Admin'}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent:'space-between', fontSize: '12px', color: '#94a3b8', marginTop:'auto' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><User size={12} /> {art.author || 'Admin'}</span>
                                     {art.published_at && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><Calendar size={11} /> {new Date(art.published_at).toLocaleDateString('id-ID')}</span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Calendar size={12} /> {new Date(art.published_at).toLocaleDateString('id-ID')}</span>
                                     )}
                                 </div>
                             </div>
@@ -350,7 +340,7 @@ export default function Home() {
             )}
         </section>
 
-        {/* 7. CEK KESEHATAN */}
+        {/* 6. CEK KESEHATAN (STATIS) */}
         <section style={{ marginBottom: '60px' }}>
   <h3 style={sectionTitle}>Cek Kesehatan Mandiri</h3>
 
@@ -408,7 +398,7 @@ export default function Home() {
 </section>
 
 
-        {/* 8. TESTIMONI */}
+        {/* 7. TESTIMONI (STATIS) */}
         <section style={{ marginBottom: '80px' }}>
              <h3 style={sectionTitle}>Kata Mereka</h3>
              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px' }}>

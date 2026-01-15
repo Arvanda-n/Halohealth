@@ -7,10 +7,19 @@ import DoctorDetail from './pages/DoctorDetail';
 import Medicines from './pages/Medicines';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
+
 import Cart from './pages/Cart';
 import BookingCheckout from './pages/BookingCheckout';
 import Login from './pages/login';
 import Register from './pages/Register';
+
+import Chat from './pages/Chat';
+import PaymentSuccess from './pages/PaymentSucces';
+import Consultation from './pages/Consultation';
+import PaymentReceipt from './pages/PaymentReceipt'
+import Profile from './pages/Profile' 
+
+
 
 // ===== CEK KESEHATAN =====
 import CekStress from './pages/CekStress';
@@ -30,6 +39,7 @@ import AdminMedicineEdit from './pages/admin/AdminMedicineEdit';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminTransaction from './pages/admin/AdminTransaction';
 
 export default function App() {
   return (
@@ -42,10 +52,18 @@ export default function App() {
         <Route path="/medicines" element={<Medicines />} />
         <Route path="/articles" element={<Articles />} />
         <Route path="/articles/:id" element={<ArticleDetail />} />
+
         <Route path="/cart" element={<Cart />} />
         <Route path="/booking-checkout" element={<BookingCheckout />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        <Route path="/chat/:receiverId" element={<Chat />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/consultation" element={<Consultation />} />
+        <Route path="/payment-receipt" element={<PaymentReceipt />} />
+        <Route path="/profile" element={<Profile />} />
+
 
         {/* ===== CEK KESEHATAN ===== */}
         <Route path="/cek-stress" element={<CekStress />} />
@@ -53,6 +71,7 @@ export default function App() {
 
         {/* ===== ADMIN ROUTES ===== */}
         <Route path="/admin" element={<AdminLayout />}>
+
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="articles" element={<AdminArticles />} />
           <Route path="articles/create" element={<AdminArticleCreate />} />
@@ -65,6 +84,32 @@ export default function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="orders" element={<AdminOrders />} />
+
+            <Route path="dashboard" element={<Dashboard />} />
+            
+            {/* Module Articles */}
+            <Route path="articles" element={<AdminArticles />} />
+            <Route path="articles/create" element={<AdminArticleCreate />} />
+            
+            {/* Module Doctors */}
+            <Route path="doctors" element={<AdminDoctors />} />       {/* 👈 2. TAMBAH ROUTE LIST DOKTER */}
+            <Route path="doctors/create" element={<AdminDoctorCreate />} />
+            <Route path="doctors/edit/:id" element={<AdminDoctorEdit />} />
+
+            {/* Module Medicines */}
+            <Route path="medicines" element={<AdminMedicines />} />
+            <Route path="medicines/create" element={<AdminMedicineCreate />} />
+            <Route path="medicines/edit/:id" element={<AdminMedicineEdit />} />
+
+            {/* Module Users */}
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="bookings" element={<AdminBookings />} />
+            <Route path="orders" element={<AdminOrders />} />
+
+            {/* Module Transactions */}
+            <Route path="transactions" element={<AdminTransaction />} />        
+            
+
         </Route>
       </Routes>
     </BrowserRouter>

@@ -11,22 +11,22 @@ return new class extends Migration
      */
    public function up()
 {
-    Schema::create('orders', function (Blueprint $table) {
-        $table->id();
-        $table->string('invoice_code'); // Contoh: INV-001
-        $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Yang beli siapa
-        $table->integer('total_price');
-        $table->string('status')->default('pending'); // pending, process, completed, cancelled
-        $table->text('note')->nullable(); // Catatan obat (JSON string simpel dulu)
-        $table->timestamps();
+    Schema::table('users', function (Blueprint $table) {
+        // Nambah kolom data diri
+        $table->enum('gender', ['Laki-laki', 'Perempuan'])->nullable()->after('email');
+        $table->date('birth_date')->nullable()->after('gender');
+        $table->string('phone')->nullable()->after('birth_date');
+        
+        // Nambah kolom kesehatan
+        $table->integer('height')->nullable()->comment('cm')->after('phone');
+        $table->integer('weight')->nullable()->comment('kg')->after('height');
     });
 }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('orders');
-    }
+public function down()
+{
+    Schema::table('users', function (Blueprint $table) {
+        $table->dropColumn(['gender', 'birth_date', 'phone', 'height', 'weight']);
+    });
+}
 };
