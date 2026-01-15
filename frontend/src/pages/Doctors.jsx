@@ -68,7 +68,8 @@ export default function Doctors() {
   };
 
   return (
-    <div style={{ background: 'white', minHeight: '100vh', fontFamily: '"Inter", sans-serif', color: '#333' }}>
+    <div className="page-fade" style={{ background: 'white', minHeight: '100vh', fontFamily: '"Inter", sans-serif', color: '#333' }}>
+
       <Header />
 
       <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px' }}>
@@ -76,11 +77,11 @@ export default function Doctors() {
         {/* === SECTION ATAS: SPLIT LAYOUT === */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '50px', alignItems: 'start', marginBottom: '60px' }}>
             
-            <div className='hidden-mobile'> 
-                <h1 style={{ fontSize: '26px', fontWeight: 'bold', color: '#334155', marginBottom: '10px' }}>
+            <div className='hidden-mobile hero-left'> 
+                <h1 className="fade-left" style={{ fontSize: '26px', fontWeight: 'bold', color: '#334155', marginBottom: '10px' }}>
                     Chat Dokter di HaloHealth
                 </h1>
-                <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '30px' }}>
+                <p className="fade-left delay-1" style={{ color: '#64748b' , lineHeight: '1.6', marginBottom: '30px' }}>
                     Layanan telemedisin yang siap siaga untuk bantu kamu hidup lebih sehat.
                 </p>
 
@@ -88,6 +89,7 @@ export default function Doctors() {
                     <img 
                         src="https://img.freepik.com/free-vector/doctor-consultation-concept-illustration_114360-1296.jpg" 
                         alt="Consultation" 
+                        className="floating"
                         style={{ width: '100%', borderRadius: '16px' }} 
                     />
                 </div>
@@ -112,34 +114,44 @@ export default function Doctors() {
             </div>
 
             <div>
-                 <div style={{ marginBottom: '30px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderRadius: '8px', padding: '5px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <Search style={{ marginLeft: '15px', color: '#cbd5e1' }} />
-                        <input 
-                            type="text" 
-                            placeholder="Cari dokter, spesialis, atau keluhan..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ width: '100%', padding: '15px', border: 'none', outline: 'none', fontSize: '15px' }}
-                        />
-                    </div>
-                </div>
+                <div className="search-wrapper">
+  <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+    <Search style={{ marginLeft: '15px', color: '#cbd5e1' }} />
+    <input 
+      type="text" 
+      placeholder="Cari dokter, spesialis, atau keluhan..." 
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      style={{ width: '100%', padding: '15px', border: 'none', outline: 'none', fontSize: '15px' }}
+    />
+  </div>
+</div>
 
                 <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#334155' }}>
                     Cari Dokter atau Spesialisasi
                 </h3>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '25px 10px', justifyContent: 'center' }}>
-                    {categories.map((cat) => (
-                        <div key={cat.name} onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'Semua' : cat.name)}
-                             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', textAlign: 'center', opacity: (selectedCategory === "Semua" || selectedCategory === cat.name) ? 1 : 0.4 }}>
-                            <div style={{ width: '55px', height: '55px', borderRadius: '50%', background: cat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', border: selectedCategory === cat.name ? '2px solid #0ea5e9' : 'none' }}>
-                                {cat.icon}
-                            </div>
-                            <span style={{ fontSize: '12px', color: '#475569', lineHeight: '1.3', fontWeight: '500' }}>{cat.name}</span>
-                        </div>
-                    ))}
-                </div>
+<div className="category-grid">
+  {categories.map((cat, index) => (
+    <div
+      key={cat.name}
+      className={`category-item ${selectedCategory === cat.name ? 'active' : ''}`}
+      onClick={() =>
+        setSelectedCategory(
+          selectedCategory === cat.name ? 'Semua' : cat.name
+        )
+      }
+      style={{ animationDelay: `${index * 0.06}s` }}
+    >
+      <div
+        className="category-icon"
+        style={{ background: cat.color }}
+      >
+        {cat.icon}
+      </div>
+      <span className="category-text">{cat.name}</span>
+    </div>
+  ))}
+</div>
 
                 <div style={{ marginTop: '40px' }}>
                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#334155', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px' }}>
