@@ -150,16 +150,14 @@ export default function Home() {
    const cekSehatTools = [
   { name: "Cek Stres", icon: "brain-circuit", link: "/cek-stress" },
   { name: "Kalkulator BMI", icon: "calculator", link: "BMI" },
-  { name: "Risiko Jantung", icon: "heart-pulse", link: "#" },
-  { name: "Risiko Diabetes", icon: "droplet", link: "#" },
-  { name: "Tes Depresi", icon: "frown", link: "#" },
+  { name: "Tes Depresi", icon: "frown", link: "/tes-depresi" },
   { name: "Kalender Haid", icon: "calendar-heart", link: "#" },
   { name: "Pengingat Obat", icon: "pill", link: "#" },
   { name: "Kalender Hamil", icon: "baby", link: "#" },
 ];
 
 
-  const cekSehatTools = [
+   [
     { name: "Cek Stres", icon: "brain-circuit" }, { name: "Kalkulator BMI", icon: "calculator" },
     { name: "Risiko Jantung", icon: "heart-pulse" }, { name: "Risiko Diabetes", icon: "droplet" },
     { name: "Tes Depresi", icon: "frown" }, { name: "Kalender Haid", icon: "calendar-heart" },
