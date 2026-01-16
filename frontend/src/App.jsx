@@ -8,6 +8,7 @@ import Medicines from './pages/Medicines';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 
+
 import Cart from './pages/Cart';
 import BookingCheckout from './pages/BookingCheckout';
 import Login from './pages/login';
@@ -24,6 +25,9 @@ import Profile from './pages/Profile'
 // ===== CEK KESEHATAN =====
 import CekStress from './pages/CekStress';
 import BMI from './pages/BMI';
+import TesDepresi from "./pages/TesDepresi";
+
+
 
 // ===== ADMIN =====
 import AdminLayout from './layouts/AdminLayout';
@@ -68,6 +72,11 @@ export default function App() {
         {/* ===== CEK KESEHATAN ===== */}
         <Route path="/cek-stress" element={<CekStress />} />
         <Route path="/bmi" element={<BMI />} />
+        <Route path="/tes-depresi" element={<TesDepresi />} />
+
+
+
+
 
         {/* ===== ADMIN ROUTES ===== */}
         <Route path="/admin" element={<AdminLayout />}>
