@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // 🔥 Tambah useNavigate
 import { Plus, Pencil, Trash2, Search, Loader2 } from 'lucide-react';
 
 export default function AdminArticles() {
+  const navigate = useNavigate(); // 🔥 Inisialisasi Navigasi
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -91,15 +92,8 @@ export default function AdminArticles() {
                             <tr key={item.id} style={{ borderBottom:'1px solid #f1f5f9' }}>
                                 <td style={{ padding:'16px', color:'#64748b' }}>{index + 1}</td>
                                 
-                                {/* 🔥 JUDUL YANG BISA DIKLIK 🔥 */}
                                 <td style={{ padding:'16px', fontWeight:'500', color:'#1e293b' }}>
-                                    <Link 
-                                        to={`/articles/${item.id}`} 
-                                        target="_blank" 
-                                        style={{ textDecoration:'none', color:'#0ea5e9', fontWeight:'bold', cursor:'pointer' }}
-                                        onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
-                                        onMouseOut={(e) => e.target.style.textDecoration = 'none'}
-                                    >
+                                    <Link to={`/articles/${item.id}`} target="_blank" style={{ textDecoration:'none', color:'#0ea5e9', fontWeight:'bold' }}>
                                         {item.title}
                                     </Link> 
                                     <br/>
@@ -114,10 +108,15 @@ export default function AdminArticles() {
                                 <td style={{ padding:'16px', color:'#475569' }}>{item.author || 'Admin'}</td>
                                 <td style={{ padding:'16px', textAlign:'center' }}>
                                     <div style={{ display:'flex', justifyContent:'center', gap:'10px' }}>
-                                        {/* Tombol Edit (Dummy) */}
-                                        <button style={{ background:'#fef3c7', border:'none', padding:'8px', borderRadius:'6px', cursor:'pointer', color:'#d97706' }}>
+                                        
+                                        {/* 🔥 TOMBOL EDIT (SUDAH AKTIF) */}
+                                        <button 
+                                            onClick={() => navigate(`/admin/articles/edit/${item.id}`)}
+                                            style={{ background:'#fef3c7', border:'none', padding:'8px', borderRadius:'6px', cursor:'pointer', color:'#d97706' }}
+                                        >
                                             <Pencil size={16} />
                                         </button>
+
                                         {/* Tombol Hapus */}
                                         <button onClick={() => handleDelete(item.id)} style={{ background:'#fee2e2', border:'none', padding:'8px', borderRadius:'6px', cursor:'pointer', color:'#ef4444' }}>
                                             <Trash2 size={16} />

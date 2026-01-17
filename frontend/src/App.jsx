@@ -44,6 +44,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminTransaction from './pages/admin/AdminTransaction';
+import AdminArticleEdit from './pages/admin/AdminArticleEdit';
 
 export default function App() {
   return (
@@ -99,6 +100,7 @@ export default function App() {
             {/* Module Articles */}
             <Route path="articles" element={<AdminArticles />} />
             <Route path="articles/create" element={<AdminArticleCreate />} />
+            <Route path="articles/edit/:id" element={<AdminArticleEdit />} />
             
             {/* Module Doctors */}
             <Route path="doctors" element={<AdminDoctors />} />       {/* 👈 2. TAMBAH ROUTE LIST DOKTER */}
