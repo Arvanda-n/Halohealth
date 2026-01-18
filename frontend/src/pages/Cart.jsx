@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/header';
 import Footer from '../components/Footer';
-// 👇 KITA PAKE LUCIDE UTK ICON YANG BAGUS-BAGUS AJA
 import { Trash2, ArrowLeft, ShieldCheck, Loader2, ShoppingBag, AlertTriangle } from 'lucide-react';
 
 export default function Cart() {
@@ -53,13 +52,15 @@ export default function Cart() {
 
     const token = localStorage.getItem('token');
     try {
+        // Optimistic UI Update (Update tampilan dulu biar cepet)
         setCartItems(items => items.map(item => item.id === cartId ? { ...item, quantity: newQty } : item));
+        
         await fetch(`http://127.0.0.1:8000/api/carts/${cartId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ quantity: newQty })
         });
-    } catch (err) { fetchCart(); }
+    } catch (err) { fetchCart(); } // Kalau gagal, balikin data asli
   };
 
   // 3. LOGIKA HAPUS (Buka Modal)
@@ -85,6 +86,23 @@ export default function Cart() {
     }
   };
 
+  // 🔥 5. FUNGSI CHECKOUT (INI YANG BARU!)
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+        alert("Keranjang masih kosong!");
+        return;
+    }
+
+    // Kirim data obat (items) ke halaman BookingCheckout
+    navigate('/booking-checkout', { 
+        state: { 
+            items: cartItems,  // Data obat dibawa
+            type: 'medicine',  // Kasih tanda kalau ini beli obat
+            doctor: null       // Pastikan dokter kosong
+        } 
+    });
+  };
+
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: '"Inter", sans-serif', display:'flex', flexDirection:'column' }}>
       
@@ -97,7 +115,7 @@ export default function Cart() {
         {/* JUDUL */}
         <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '15px' }}>
             <button onClick={() => navigate('/medicines')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
-                <ArrowLeft /> {/* Pake Lucide */}
+                <ArrowLeft /> 
             </button>
             <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>Keranjang Belanja</h2>
         </div>
@@ -128,21 +146,21 @@ export default function Cart() {
 
                             {/* Tombol Aksi */}
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'end', gap: '15px' }}>
-                                {/* TOMBOL SAMPAH (PAKE LUCIDE - LEBIH BAGUS) */}
+                                {/* TOMBOL SAMPAH */}
                                 <button onClick={() => askToDelete(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }} title="Hapus">
                                     <Trash2 size={18} />
                                 </button>
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc', padding: '5px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                                     
-                                    {/* TOMBOL MINUS (PAKE GAMBAR LINK - BIAR JELAS) */}
+                                    {/* TOMBOL MINUS */}
                                     <button onClick={() => updateQty(item.id, item.quantity, -1)} style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer' }}>
                                         <img src="https://cdn-icons-png.flaticon.com/512/561/561179.png" width="12" alt="Minus" />
                                     </button>
                                     
                                     <span style={{ fontSize: '14px', fontWeight: 'bold', minWidth: '20px', textAlign: 'center', color: '#334155' }}>{item.quantity}</span>
                                     
-                                    {/* TOMBOL PLUS (PAKE GAMBAR LINK - BIAR JELAS) */}
+                                    {/* TOMBOL PLUS */}
                                     <button onClick={() => updateQty(item.id, item.quantity, 1)} style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0ea5e9', border: 'none', borderRadius: '6px', cursor: 'pointer', boxShadow: '0 2px 5px rgba(14, 165, 233, 0.3)' }}>
                                         <img src="https://cdn-icons-png.flaticon.com/512/748/748113.png" width="12" style={{ filter: 'brightness(0) invert(1)' }} alt="Plus" />
                                     </button>
@@ -161,13 +179,13 @@ export default function Cart() {
                         <div style={{ borderTop: '1px dashed #cbd5e1', margin: '15px 0' }}></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '25px', color: '#0f172a', fontSize: '18px', fontWeight: 'bold' }}><span>Total Tagihan</span><span>Rp {total.toLocaleString('id-ID')}</span></div>
                         
+                        {/* 🔥 TOMBOL CHECKOUT PANGGIL FUNGSI BARU */}
                         <button 
-                            onClick={() => navigate('/booking-checkout')}
+                            onClick={handleCheckout}
                             style={{ width: '100%', padding: '15px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)' }}>
                             Checkout
                         </button>
                         
-                        {/* ICON JAMINAN (PAKE LUCIDE - LEBIH BAGUS) */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', color: '#10b981', fontSize: '13px', background: '#ecfdf5', padding: '10px', borderRadius: '8px' }}>
                             <ShieldCheck size={18} />
                             <span>Jaminan transaksi aman & terpercaya.</span>
@@ -178,7 +196,7 @@ export default function Cart() {
         ) : (
             <div style={{ textAlign: 'center', padding: '80px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ background: '#f1f5f9', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
-                    <ShoppingBag size={50} color="#94a3b8" /> {/* Pake Lucide */}
+                    <ShoppingBag size={50} color="#94a3b8" /> 
                 </div>
                 <h3 style={{ color: '#334155', marginBottom: '5px' }}>Keranjang belanja kosong</h3>
                 <p style={{ color: '#64748b', marginBottom: '25px' }}>Sepertinya kamu belum menambahkan obat apapun.</p>
@@ -189,7 +207,7 @@ export default function Cart() {
 
       <Footer />
 
-      {/* MODAL POP-UP KONFIRMASI HAPUS (PAKE LUCIDE BIAR TAJAM) */}
+      {/* MODAL POP-UP KONFIRMASI HAPUS */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
             <div style={{ background: 'white', borderRadius: '16px', padding: '30px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', animation: 'fadeIn 0.2s ease-out' }}>
