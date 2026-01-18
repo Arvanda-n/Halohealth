@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 import { 
     Search, Star, Stethoscope, 
     Baby, Heart, Eye, Brain, Smile, 
-    Zap, Activity, Loader2, MessageCircle, ShieldCheck, Clock
+    Zap, Activity, Loader2, MessageCircle, ShieldCheck, Clock, MapPin
 } from 'lucide-react';
 
 export default function Doctors() {
@@ -19,26 +19,25 @@ export default function Doctors() {
 
   // LIST KATEGORI
   const categories = [
-    { name: 'Dokter Umum', icon: <Stethoscope size={24} color="#0ea5e9" />, color: '#e0f2fe' },
-    { name: 'Spesialis Anak', icon: <Baby size={24} color="#ec4899" />, color: '#fce7f3' },
-    { name: 'Spesialis Kulit', icon: <Smile size={24} color="#f59e0b" />, color: '#fef3c7' },
-    { name: 'Penyakit Dalam', icon: <Zap size={24} color="#8b5cf6" />, color: '#ede9fe' },
-    { name: 'Kandungan', icon: <Baby size={24} color="#ec4899" />, color: '#fce7f3' },
-    { name: 'Spesialis THT', icon: <Activity size={24} color="#10b981" />, color: '#d1fae5' },
-    { name: 'Kesehatan Jiwa', icon: <Brain size={24} color="#6366f1" />, color: '#e0e7ff' },
-    { name: 'Dokter Gigi', icon: <Smile size={24} color="#06b6d4" />, color: '#cffafe' },
-    { name: 'Dokter Hewan', icon: <Activity size={24} color="#f97316" />, color: '#ffedd5' },
-    { name: 'Spesialis Mata', icon: <Eye size={24} color="#3b82f6" />, color: '#dbeafe' },
-    { name: 'Spesialis Jantung', icon: <Heart size={24} color="#ef4444" />, color: '#fee2e2' },
+    { name: 'Dokter Umum', value: 'Umum', icon: <Stethoscope size={24} color="#0ea5e9" />, color: '#e0f2fe' },
+    { name: 'Spesialis Anak', value: 'Anak', icon: <Baby size={24} color="#ec4899" />, color: '#fce7f3' },
+    { name: 'Spesialis Kulit', value: 'Kulit', icon: <Smile size={24} color="#f59e0b" />, color: '#fef3c7' },
+    { name: 'Penyakit Dalam', value: 'Penyakit Dalam', icon: <Zap size={24} color="#8b5cf6" />, color: '#ede9fe' },
+    { name: 'Kandungan', value: 'Kandungan', icon: <Baby size={24} color="#ec4899" />, color: '#fce7f3' },
+    { name: 'Spesialis THT', value: 'THT', icon: <Activity size={24} color="#10b981" />, color: '#d1fae5' },
+    { name: 'Kesehatan Jiwa', value: 'Jiwa', icon: <Brain size={24} color="#6366f1" />, color: '#e0e7ff' },
+    { name: 'Dokter Gigi', value: 'Gigi', icon: <Smile size={24} color="#06b6d4" />, color: '#cffafe' },
+    { name: 'Dokter Hewan', value: 'Hewan', icon: <Activity size={24} color="#f97316" />, color: '#ffedd5' },
+    { name: 'Spesialis Mata', value: 'Mata', icon: <Eye size={24} color="#3b82f6" />, color: '#dbeafe' },
+    { name: 'Spesialis Jantung', value: 'Jantung', icon: <Heart size={24} color="#ef4444" />, color: '#fee2e2' },
   ];
 
-  // FETCH DATA (SINKRON DENGAN BACKEND BARU)
+  // FETCH DATA
   useEffect(() => {
     const fetchDoctors = async () => {
         try {
             const response = await fetch('http://127.0.0.1:8000/api/doctors');
             const result = await response.json();
-            // Ambil data dari result.data karena struktur API baru
             const finalData = result.data ? result.data : (Array.isArray(result) ? result : []);
             setDoctors(finalData);
         } catch (error) {
@@ -53,10 +52,22 @@ export default function Doctors() {
 
   // FILTER LOGIC
   const filteredDoctors = doctors.filter(doc => {
-      // Menggunakan doc.specialization sesuai database
-      const categoryMatch = selectedCategory === "Semua" ? true : (doc.specialization || doc.specialist) === selectedCategory;
-      const name = doc.user?.name || doc.name || "";
-      const searchMatch = name.toLowerCase().includes(searchTerm.toLowerCase());
+      const name = (doc.user?.name || doc.name || "").toLowerCase();
+      const specialist = (doc.specialization || doc.specialist || "").toLowerCase();
+      const hospital = (doc.hospital || "").toLowerCase();
+      
+      const filterValue = selectedCategory.toLowerCase();
+      const keyword = searchTerm.toLowerCase();
+
+      const categoryMatch = selectedCategory === "Semua" 
+          ? true 
+          : specialist.includes(filterValue); 
+
+      const searchMatch = 
+          name.includes(keyword) || 
+          specialist.includes(keyword) || 
+          hospital.includes(keyword);
+      
       return categoryMatch && searchMatch;
   });
 
@@ -74,7 +85,7 @@ export default function Doctors() {
 
       <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 20px' }}>
         
-        {/* === SECTION ATAS: SPLIT LAYOUT === */}
+        {/* SECTION ATAS */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '50px', alignItems: 'start', marginBottom: '60px' }}>
             
             <div className='hidden-mobile hero-left'> 
@@ -115,43 +126,37 @@ export default function Doctors() {
 
             <div>
                 <div className="search-wrapper">
-  <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-    <Search style={{ marginLeft: '15px', color: '#cbd5e1' }} />
-    <input 
-      type="text" 
-      placeholder="Cari dokter, spesialis, atau keluhan..." 
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      style={{ width: '100%', padding: '15px', border: 'none', outline: 'none', fontSize: '15px' }}
-    />
-  </div>
-</div>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <Search style={{ marginLeft: '15px', color: '#cbd5e1' }} />
+                    <input 
+                      type="text" 
+                      placeholder="Cari dokter, spesialis, atau keluhan..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{ width: '100%', padding: '15px', border: 'none', outline: 'none', fontSize: '15px' }}
+                    />
+                  </div>
+                </div>
 
                 <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#334155' }}>
                     Cari Dokter atau Spesialisasi
                 </h3>
-<div className="category-grid">
-  {categories.map((cat, index) => (
-    <div
-      key={cat.name}
-      className={`category-item ${selectedCategory === cat.name ? 'active' : ''}`}
-      onClick={() =>
-        setSelectedCategory(
-          selectedCategory === cat.name ? 'Semua' : cat.name
-        )
-      }
-      style={{ animationDelay: `${index * 0.06}s` }}
-    >
-      <div
-        className="category-icon"
-        style={{ background: cat.color }}
-      >
-        {cat.icon}
-      </div>
-      <span className="category-text">{cat.name}</span>
-    </div>
-  ))}
-</div>
+                
+                <div className="category-grid">
+                  {categories.map((cat, index) => (
+                    <div
+                      key={cat.name}
+                      className={`category-item ${selectedCategory === cat.value ? 'active' : ''}`}
+                      onClick={() => setSelectedCategory(selectedCategory === cat.value ? 'Semua' : cat.value)}
+                      style={{ animationDelay: `${index * 0.06}s` }}
+                    >
+                      <div className="category-icon" style={{ background: cat.color }}>
+                        {cat.icon}
+                      </div>
+                      <span className="category-text">{cat.name}</span>
+                    </div>
+                  ))}
+                </div>
 
                 <div style={{ marginTop: '40px' }}>
                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', color: '#334155', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px' }}>
@@ -164,8 +169,9 @@ export default function Doctors() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
                             {filteredDoctors.length > 0 ? (
                                 filteredDoctors.map((doc) => (
-                                    <div key={doc.id} onClick={() => navigate(`/doctors/${doc.id}`)}
-                                         style={{ display: 'flex', gap: '15px', padding: '15px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer', transition: '0.2s' }}>
+                                    <div key={doc.id} 
+                                         onClick={() => navigate(`/doctors/${doc.id}`, { state: { doctor: doc } })}
+                                         style={{ display: 'flex', gap: '15px', padding: '15px', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer', transition: '0.2s', alignItems:'start' }} className="hover-card">
                                         <img 
                                             src={getImageUrl(doc.image)} alt="doctor" 
                                             style={{ width: '70px', height: '70px', borderRadius: '10px', objectFit: 'cover' }}
@@ -173,16 +179,29 @@ export default function Doctors() {
                                         />
                                         <div style={{ flex: 1 }}>
                                             <h4 style={{ margin: '0 0 5px', fontSize: '16px', fontWeight: 'bold' }}>{doc.user?.name || doc.name}</h4>
-                                            <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#0ea5e9' }}>{doc.specialization || doc.specialist}</p>
+                                            <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#0ea5e9', fontWeight:'bold', background:'#e0f2fe', width:'fit-content', padding:'2px 8px', borderRadius:'6px' }}>{doc.specialization || doc.specialist}</p>
+                                            
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{doc.experience_years || 0} Tahun Pengalaman</span>
-                                                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f59e0b' }}>Rp {(doc.consultation_fee || doc.price || 0).toLocaleString()}</span>
+                                                <div style={{display:'flex', gap:'10px', fontSize:'12px', color:'#64748b'}}>
+                                                    <span style={{display:'flex', alignItems:'center', gap:'4px'}}><Star size={12} fill="#fbbf24" color="#fbbf24"/> 4.8</span>
+                                                    <span>|</span>
+                                                    <span>{doc.experience_years || '5'} Tahun</span>
+                                                </div>
+                                                
+                                                {/* 🔥 BAGIAN HARGA YANG DIPERBAIKI 🔥 */}
+                                                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f59e0b' }}>
+                                                    Rp {(doc.consultation_fee || doc.price || 50000).toLocaleString('id-ID')}
+                                                </span>
+                                                
                                             </div>
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <p style={{ color: '#94a3b8', textAlign: 'center' }}>Tidak ada dokter ditemukan.</p>
+                                <div style={{ textAlign: 'center', padding: '40px', background: '#f8fafc', borderRadius: '12px', color: '#94a3b8' }}>
+                                    <p>Tidak ada dokter ditemukan.</p>
+                                    <button onClick={() => { setSearchTerm(""); setSelectedCategory("Semua"); }} style={{marginTop:'10px', color:'#0ea5e9', border:'none', background:'none', cursor:'pointer', fontWeight:'bold'}}>Reset Filter</button>
+                                </div>
                             )}
                         </div>
                     )}
@@ -190,7 +209,7 @@ export default function Doctors() {
             </div>
         </div>
 
-        {/* === SECTION SEO TEXT (HAPUS JANGAN SAMPAI ILANG!) === */}
+        {/* SECTION SEO TEXT */}
         <div style={{ marginTop: '80px', borderTop: '1px solid #e2e8f0', paddingTop: '40px', color: '#64748b', fontSize: '14px', lineHeight: '1.8' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#334155', marginBottom: '15px' }}>
                 Tanya Dokter Umum dan Spesialis di HaloHealth

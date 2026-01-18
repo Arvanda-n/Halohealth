@@ -8,12 +8,15 @@ import foto1 from "../assets/foto3.png";
 import foto2 from "../assets/foto2.png"; 
 import foto3 from "../assets/foto4.png"; 
 
-// IMPORT ICONS PNG (Untuk Menu Menu)
+// IMPORT ICONS PNG
 import chatIcon from "../assets/icons/chat.png";
 import tokoIcon from "../assets/icons/toko.png";
 
-// ICONS LIB (Lucide React)
-import { Loader2, User, Calendar, ShieldCheck } from 'lucide-react'; // Tambah ShieldCheck
+// ICONS LIB (Lucide React) - Updated
+import { 
+  Loader2, User, Calendar, ShieldCheck, 
+  BrainCircuit, Calculator, Frown // Tambahan Icon buat Cek Sehat
+} from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -37,7 +40,6 @@ export default function Home() {
             const resMed = await fetch('http://127.0.0.1:8000/api/medicines');
             const dataMed = await resMed.json();
             
-            // Sinkronisasi data obat + Randomize
             let finalMed = dataMed.data ? dataMed.data : (Array.isArray(dataMed) ? dataMed : []);
             finalMed = [...finalMed].sort(() => 0.5 - Math.random()); 
             setMedicines(finalMed); 
@@ -46,11 +48,10 @@ export default function Home() {
             const resArt = await fetch('http://127.0.0.1:8000/api/articles');
             const dataArt = await resArt.json();
             
-            // Sinkronisasi data artikel + Randomize
             let finalArt = dataArt.data ? dataArt.data : (Array.isArray(dataArt) ? dataArt : []);
             finalArt = [...finalArt].sort(() => 0.5 - Math.random()); 
             
-            setArticles(finalArt.slice(0, 3));  // Ambil 3 artikel acak
+            setArticles(finalArt.slice(0, 3)); 
 
         } catch (error) {
             console.error("Gagal koneksi ke server:", error);
@@ -65,7 +66,7 @@ export default function Home() {
   // 2. LOGIKA FILTERING OBAT
   const getFilteredMedicines = () => {
     if (activeTab === 'Semua') {
-        return medicines.slice(0, 5); // Ambil 5 obat
+        return medicines.slice(0, 5); 
     }
 
     const keywords = {
@@ -139,31 +140,12 @@ export default function Home() {
 
   const medicineTabs = ['Semua', 'Obat Cair', 'Tablet', 'Vitamin', 'Ibu & Bayi', 'P3K', 'Alat Kesehatan', 'Herbal'];
 
-
-  const specialistCategories = [
-    { name: "Sp. Mata", icon: "eye" }, { name: "Sp. Kulit", icon: "sparkles" },
-    { name: "Sp. Kandungan", icon: "heart-handshake" }, { name: "Sp. THT", icon: "ear" },
-    { name: "Sp. Anak", icon: "baby" }, { name: "Sp. Penyakit Dalam", icon: "activity" }
+  // 🔥 DATA CEK KESEHATAN (SISA 3 ITEM & RAPI)
+  const cekSehatTools = [
+    { name: "Cek Stres", icon: <BrainCircuit size={32} color="#8b5cf6" />, link: "/cek-stress", bg: '#ede9fe' },
+    { name: "Kalkulator BMI", icon: <Calculator size={32} color="#0f172a" />, link: "/bmi-calculator", bg: '#f1f5f9' },
+    { name: "Tes Depresi", icon: <Frown size={32} color="#ef4444" />, link: "/tes-depresi", bg: '#fee2e2' },
   ];
-
- 
-   const cekSehatTools = [
-  { name: "Cek Stres", icon: "brain-circuit", link: "/cek-stress" },
-  { name: "Kalkulator BMI", icon: "calculator", link: "BMI" },
-  { name: "Tes Depresi", icon: "frown", link: "/tes-depresi" },
-  { name: "Kalender Haid", icon: "calendar-heart", link: "#" },
-  { name: "Pengingat Obat", icon: "pill", link: "#" },
-  { name: "Kalender Hamil", icon: "baby", link: "#" },
-];
-
-
-   [
-    { name: "Cek Stres", icon: "brain-circuit" }, { name: "Kalkulator BMI", icon: "calculator" },
-    { name: "Risiko Jantung", icon: "heart-pulse" }, { name: "Risiko Diabetes", icon: "droplet" },
-    { name: "Tes Depresi", icon: "frown" }, { name: "Kalender Haid", icon: "calendar-heart" },
-    { name: "Pengingat Obat", icon: "pill" }, { name: "Kalender Hamil", icon: "baby" }
-  ];
-
 
   const testimonials = [
     { text: "Sangat membantu.. malam2 butuh obat, gak perlu keluar rumah!", name: "Sainem W.", role: "Ibu Rumah Tangga" },
@@ -228,12 +210,10 @@ export default function Home() {
             </div>
         </section>
 
-        {/* 3. DIAWASI MEDICAL (REVISI ICON LUCIDE) */}
+        {/* 3. DIAWASI MEDICAL */}
         <section style={{ marginBottom: '60px' }}>
              <div style={{ background: '#f0f9ff', borderRadius: '16px', padding: '40px', borderLeft: `6px solid ${mainBlue}`, display: 'flex', alignItems: 'center', gap: '25px' }}>
-                {/* Gunakan ShieldCheck dari Lucide */}
                 <ShieldCheck size={50} color={mainBlue} />
-                
                 <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0369a1', margin: 0 }}>Diawasi Board of Medical Excellence</h3>
                     <p style={{ margin: '5px 0 0', fontSize: '14px', color: '#334155' }}>Standar medis internasional untuk keamanan dan kenyamanan Anda.</p>
@@ -338,63 +318,55 @@ export default function Home() {
             )}
         </section>
 
-        {/* 6. CEK KESEHATAN (STATIS) */}
+        {/* 6. CEK KESEHATAN (Layout Baru - Center & 3 Item) */}
         <section style={{ marginBottom: '60px' }}>
-  <h3 style={sectionTitle}>Cek Kesehatan Mandiri</h3>
+          <h3 style={sectionTitle}>Cek Kesehatan Mandiri</h3>
 
-  <div
-    style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(8, 1fr)',
-      gap: '15px',
-      textAlign: 'center'
-    }}
-  >
-    {cekSehatTools.map((tool, i) => (
-      <div
-        key={i}
-        className="interactive-card"
-        onClick={() => navigate(tool.link)}
-        style={{
-          border: 'none',
-          background: 'transparent',
-          boxShadow: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        <div
-          style={{
-            width: '60px',
-            height: '60px',
-            background: '#f8fafc',
-            borderRadius: '50%',
-            margin: '0 auto 10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <img
-            src={`https://unpkg.com/lucide-static@latest/icons/${tool.icon}.svg`}
-            style={{ width: '24px' }}
-            alt="icon"
-          />
-        </div>
+          {/* Menggunakan Flex + Center agar 3 item ada di tengah */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
+            {cekSehatTools.map((tool, i) => (
+              <div
+                key={i}
+                className="interactive-card"
+                onClick={() => {
+                    if (tool.link === '#') {
+                        alert("Fitur segera hadir!");
+                    } else {
+                        navigate(tool.link);
+                    }
+                }}
+                style={{
+                  width: '200px',
+                  background: 'white',
+                  borderRadius: '16px',
+                  padding: '30px 20px',
+                  textAlign: 'center',
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
+                  cursor: 'pointer'
+                }}
+              >
+                <div
+                  style={{
+                    width: '60px', height: '60px',
+                    background: tool.bg,
+                    borderRadius: '50%',
+                    margin: '0 auto 15px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  {/* Icon langsung dari React Component */}
+                  {tool.icon}
+                </div>
 
-        <span
-          style={{
-            fontSize: '12px',
-            fontWeight: '500',
-            color: '#555'
-          }}
-        >
-          {tool.name}
-        </span>
-      </div>
-    ))}
-  </div>
-</section>
-
+                <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', marginBottom: '5px' }}>
+                    {tool.name}
+                </h4>
+                <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Cek Sekarang</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* 7. TESTIMONI (STATIS) */}
         <section style={{ marginBottom: '80px' }}>
