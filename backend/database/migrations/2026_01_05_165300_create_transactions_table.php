@@ -6,26 +6,32 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('patient_id')->constrained('users')->onDelete('cascade');
-    $table->foreignId('doctor_id')->constrained('users')->onDelete('cascade');
-    $table->decimal('amount', 12, 2);
-    $table->enum('status', ['pending', 'paid', 'cancelled'])->default('pending');
-    $table->string('payment_method')->nullable();
-    $table->timestamps();
-});
+            $table->id();
+            
+            // Ubah 'patient_id' jadi 'user_id' biar cocok sama Frontend
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            
+            // 🔥 KUNCI: ->nullable() biar bisa beli obat tanpa dokter
+            $table->foreignId('doctor_id')->nullable()->constrained('users')->onDelete('cascade');
 
+            $table->decimal('amount', 12, 2);
+            
+            // Tambah status 'success'
+            $table->enum('status', ['pending', 'paid', 'cancelled', 'success'])->default('pending');
+            
+            $table->string('payment_method')->nullable();
+
+            // Tambah kolom untuk Dashboard Admin
+            $table->string('type')->default('consultation'); // 'medicine' / 'consultation'
+            $table->text('note')->nullable(); 
+
+            $table->timestamps();
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('transactions');

@@ -5,69 +5,64 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
-    // 1. Pasien membuat transaksi (Checkout)
     public function store(Request $request)
     {
         $request->validate([
-            'doctor_id' => 'required|exists:users,id',
-            'amount' => 'required|numeric'
+            'amount' => 'required|numeric',
+            'doctor_id' => 'nullable', 
+            'type' => 'nullable|string',
+            'note' => 'nullable|string',
+            'status' => 'nullable|string'
         ]);
 
         $transaction = Transaction::create([
-            'patient_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'doctor_id' => $request->doctor_id,
             'amount' => $request->amount,
-            
-            // 🔥 REVISI PENTING:
-            // Ubah jadi 'pending' biar tombol chat terkunci dulu sebelum diapprove Admin
-            'status' => 'pending' 
-        ]);
-
-        return response()->json($transaction, 201);
-    }
-
-    // 2. Admin lihat semua transaksi
-    public function index()
-    {
-        // Ditambah orderBy desc biar transaksi terbaru muncul paling atas
-        return Transaction::with(['patient', 'doctor'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-    }
-
-    // 3. History Transaksi per User (Profil Pasien)
-    public function history()
-    {
-        $transactions = Transaction::where('patient_id', auth()->id())
-            ->with(['doctor']) 
-            ->orderBy('created_at', 'desc') 
-            ->get();
-
-        return response()->json($transactions);
-    }
-
-    // 🔥 4. FITUR BARU: Update Status Transaksi (Dipakai Admin)
-    public function update(Request $request, $id)
-    {
-        // Validasi input status
-        $request->validate([
-            'status' => 'required|in:pending,success,failed,completed'
-        ]);
-
-        // Cari transaksi, kalau gak ada error 404
-        $transaction = Transaction::findOrFail($id);
-
-        // Update statusnya
-        $transaction->update([
-            'status' => $request->status
+            'payment_method' => $request->payment_method ?? 'gopay',
+            'status' => $request->status ?? 'pending',
+            'type' => $request->type ?? 'consultation',
+            'note' => $request->note, 
         ]);
 
         return response()->json([
-            'message' => 'Status transaksi berhasil diperbarui',
+            'message' => 'Transaksi berhasil dibuat',
             'data' => $transaction
-        ]);
+        ], 201);
+    }
+
+    // Admin Lihat Semua
+    public function index()
+    {
+        // 🔥 Tambahkan 'doctorData' di with()
+        $transactions = Transaction::with(['user', 'doctor', 'doctorData'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['data' => $transactions]);
+    }
+
+    // User Lihat History
+    public function history()
+    {
+        // 🔥 Tambahkan 'doctorData' di with() biar fotonya kebawa
+        $transactions = Transaction::where('user_id', Auth::id())
+            ->with(['doctor', 'doctorData']) 
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['data' => $transactions]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate(['status' => 'required']);
+        $transaction = Transaction::findOrFail($id);
+        $transaction->update(['status' => $request->status]);
+        return response()->json(['data' => $transaction]);
     }
 }

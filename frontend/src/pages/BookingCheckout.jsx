@@ -30,7 +30,6 @@ export default function BookingCheckout() {
     setUserData(JSON.parse(userString));
 
     if (!state || (!isDoctorConsultation && !isMedicinePurchase)) {
-        console.log("State Error:", state); 
         alert("Keranjang kosong atau layanan tidak valid.");
         navigate('/');
     }
@@ -38,16 +37,13 @@ export default function BookingCheckout() {
 
   if (!state || (!isDoctorConsultation && !isMedicinePurchase) || !userData) return null;
 
-  // HITUNG HARGA
+  // --- HITUNG HARGA ---
   let consultationFee = 0;
   let medicinesTotal = 0;
   let tax = 0;
   let serviceFee = 2500;
 
-  if (isDoctorConsultation) {
-      consultationFee = state.doctor.price || 50000;
-  }
-
+  if (isDoctorConsultation) consultationFee = state.doctor.price || 50000;
   if (isMedicinePurchase) {
       medicinesTotal = state.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
       tax = medicinesTotal * 0.11;
@@ -55,47 +51,48 @@ export default function BookingCheckout() {
 
   const grandTotal = consultationFee + medicinesTotal + tax + serviceFee;
 
-  // 🔥 FUNGSI HAPUS KERANJANG (DIPISAH BIAR BISA DIPANGGIL KAPAN AJA)
+  // --- HAPUS KERANJANG ---
   const clearCart = async (token) => {
       if (isMedicinePurchase) {
           try {
-              console.log("Membersihkan keranjang...");
-              // Hapus semua item yang ada di list checkout
               await Promise.all(state.items.map(item => 
                   fetch(`http://127.0.0.1:8000/api/carts/${item.id}`, {
                       method: 'DELETE',
                       headers: { 'Authorization': `Bearer ${token}` }
                   })
               ));
-          } catch (err) {
-              console.error("Gagal hapus keranjang:", err);
-          }
+          } catch (err) { console.error("Gagal hapus keranjang:", err); }
       }
   };
 
+  // --- LOGIKA BAYAR ---
   const handlePayment = async () => {
     setLoading(true);
     const token = localStorage.getItem('token'); 
 
-    const receiptData = {
-        doctor: isDoctorConsultation ? state.doctor : null,
-        items: isMedicinePurchase ? state.items : [],
-        transactionId: 'TRX-' + Math.floor(Math.random() * 100000),
-        total: grandTotal,
-        date: new Date().toISOString(),
-        shopInfo: isMedicinePurchase ? { name: "Apotek HaloHealth", image: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png" } : null 
+    // Gabungkan nama obat jadi satu string untuk catatan
+    const itemNote = isMedicinePurchase 
+        ? state.items.map(i => `${i.name} (${i.quantity})`).join(', ') 
+        : 'Konsultasi Dokter';
+
+    let payload = {
+        amount: grandTotal,
+        status: 'success',
+        payment_method: paymentMethod,
+        type: isDoctorConsultation ? 'consultation' : 'medicine',
+        user_id: userData.id,
+        
+        // 🚨 FIX UTAMA DISINI:
+        // Gunakan 'user_id' (ID akun) bukan 'id' (ID tabel dokter)
+        // Karena di database relation-nya ke tabel Users.
+        doctor_id: isDoctorConsultation ? state.doctor.user_id : null, 
+        
+        note: itemNote
     };
 
-    try {
-        let payload = {
-            amount: grandTotal,
-            status: 'success',
-            payment_method: paymentMethod,
-            type: isDoctorConsultation ? 'consultation' : 'medicine',
-            doctor_id: isDoctorConsultation ? state.doctor.id : null, 
-            note: isMedicinePurchase ? `Pembelian ${state.items.length} item obat` : 'Konsultasi Dokter'
-        };
+    console.log("Mengirim Payload:", payload); // Cek console buat debugging
 
+    try {
         const response = await fetch('http://127.0.0.1:8000/api/transactions', { 
             method: 'POST',
             headers: {
@@ -105,20 +102,32 @@ export default function BookingCheckout() {
             body: JSON.stringify(payload)
         });
 
+        const result = await response.json();
+
         if (response.ok) {
-            const result = await response.json();
-            receiptData.transactionId = result.data?.id || result.id || receiptData.transactionId;
+            await clearCart(token);
+
+            // Siapkan data untuk halaman Receipt
+            const receiptData = {
+                doctor: isDoctorConsultation ? state.doctor : null,
+                items: isMedicinePurchase ? state.items : [],
+                transactionId: result.data?.id || result.id || 'TRX-NEW',
+                total: grandTotal,
+                date: new Date().toISOString(),
+                shopInfo: isMedicinePurchase ? { name: "Apotek HaloHealth", image: "https://cdn-icons-png.flaticon.com/512/1048/1048953.png" } : null 
+            };
+            navigate('/payment-receipt', { state: receiptData });
+
+        } else {
+            console.error("Gagal backend:", result);
+            alert(`Gagal Transaksi: ${result.message || "Database menolak data (Cek Foreign Key)."}`);
         }
 
     } catch (error) {
-        console.error("Network Error (Simulasi Jalan Terus):", error);
+        console.error("Network Error:", error);
+        alert("Koneksi gagal! Pastikan Backend berjalan.");
     } finally {
-        // 🔥 FIX: HAPUS KERANJANG DISINI (DI FINALLY)
-        // Jadi mau sukses atau error, keranjang tetap dihapus karena user sudah klik "Bayar"
-        await clearCart(token);
-        
         setLoading(false);
-        navigate('/payment-receipt', { state: receiptData });
     }
   };
 

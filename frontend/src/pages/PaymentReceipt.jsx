@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/header';
 // Import Icon Lucide
@@ -10,7 +10,7 @@ export default function PaymentReceipt() {
     const receiptRef = useRef();
     
     // --- 1. AMBIL DATA (SUPPORT DOKTER & OBAT) ---
-    const { doctor, items, transactionId, status, total, date, shopInfo } = location.state || {};
+    const { doctor, items, transactionId, status, total, date } = location.state || {};
 
     // Deteksi Tipe Transaksi
     const isConsultation = !!doctor;
@@ -25,7 +25,19 @@ export default function PaymentReceipt() {
         return () => { if (document.body.contains(script)) document.body.removeChild(script); };
     }, []);
 
-    // --- 3. PROTEKSI (MODIFIKASI: Lolos jika Dokter ADA atau Obat ADA) ---
+    // --- 3. LOGIC GAMBAR (INI YANG DIPERBAIKI) ---
+    const getImageUrl = (path) => {
+        if (!path) return "https://cdn-icons-png.flaticon.com/512/3774/3774299.png";
+        
+        // Kalau path sudah lengkap (https://...), pakai langsung
+        if (path.startsWith('http')) return path;
+        
+        // 🔥 FIX: Pastikan ada slash (/) di antara domain dan path
+        const cleanPath = path.replace(/^\//, ''); // Hapus slash depan kalau ada biar gak double
+        return `http://127.0.0.1:8000/${cleanPath}`;
+    };
+
+    // --- 4. PROTEKSI (Lolos jika Dokter ADA atau Obat ADA) ---
     if (!isConsultation && !isMedicine) {
         return (
             <div style={{ minHeight: '100vh', background: '#f8fafc', paddingTop: '100px', textAlign: 'center', fontFamily: '"Inter", sans-serif' }}>
@@ -46,7 +58,7 @@ export default function PaymentReceipt() {
         );
     }
 
-    // --- 4. FUNGSI DOWNLOAD ---
+    // --- 5. FUNGSI DOWNLOAD ---
     const handleDownload = async () => {
         if (window.html2canvas) {
             window.html2canvas(receiptRef.current, { useCORS: true, scale: 2 }).then(canvas => {
@@ -60,7 +72,7 @@ export default function PaymentReceipt() {
         }
     };
 
-    // --- 5. FUNGSI SHARE (Hybrid Text) ---
+    // --- 6. FUNGSI SHARE ---
     const handleShare = async () => {
         const titleText = isConsultation 
             ? `DOKTER: ${doctor?.name}` 
@@ -82,14 +94,7 @@ export default function PaymentReceipt() {
         }
     };
 
-    // --- LOGIC GAMBAR ---
-    const getImageUrl = (path) => {
-        if (!path) return "https://cdn-icons-png.flaticon.com/512/3774/3774299.png";
-        if (path.startsWith('http')) return path;
-        return `http://127.0.0.1:8000${path}`;
-    };
-
-    // --- STYLING (Sama Persis Punya Abang) ---
+    // --- STYLING ---
     const styles = {
         pageContainer: { background: '#f1f5f9', minHeight: '100vh', fontFamily: '"Inter", sans-serif', paddingBottom: '50px' },
         fixedHeader: { position: 'fixed', top: 0, left: 0, right: 0, height: '80px', zIndex: 999, background: 'white', borderBottom: '1px solid #e2e8f0' },
@@ -202,7 +207,7 @@ export default function PaymentReceipt() {
                         </button>
                     </div>
 
-                    {/* 🔥 TOMBOL HYBRID: CHAT (Jika Dokter) atau BELANJA LAGI (Jika Obat) */}
+                    {/* BUTTON DINAMIS: Chat atau Belanja Lagi */}
                     {isConsultation ? (
                         (status === 'success' || !status) ? (
                             <button 
