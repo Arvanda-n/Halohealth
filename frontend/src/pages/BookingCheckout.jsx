@@ -70,27 +70,31 @@ export default function BookingCheckout() {
     setLoading(true);
     const token = localStorage.getItem('token'); 
 
-    // Gabungkan nama obat jadi satu string untuk catatan
-    const itemNote = isMedicinePurchase 
-        ? state.items.map(i => `${i.name} (${i.quantity})`).join(', ') 
-        : 'Konsultasi Dokter';
+    // 🔥 NOTE SIMPEL AJA (Gak usah tanggal)
+    let itemNote = '';
+    if (isDoctorConsultation) {
+        itemNote = `Konsultasi Dokter Spesialis ${state.doctor.specialist || ''}`;
+    } else {
+        itemNote = state.items.map(i => `${i.name} (${i.quantity})`).join(', ');
+    }
 
     let payload = {
         amount: grandTotal,
-        status: 'success',
+        status: 'success', // Langsung success biar cepet (simulasi)
         payment_method: paymentMethod,
         type: isDoctorConsultation ? 'consultation' : 'medicine',
         user_id: userData.id,
-        
-        // 🚨 FIX UTAMA DISINI:
-        // Gunakan 'user_id' (ID akun) bukan 'id' (ID tabel dokter)
-        // Karena di database relation-nya ke tabel Users.
         doctor_id: isDoctorConsultation ? state.doctor.user_id : null, 
         
-        note: itemNote
+        note: itemNote,
+
+        items: isMedicinePurchase ? state.items.map(item => ({
+            id: item.medicine_id || item.id, 
+            quantity: item.quantity
+        })) : []
     };
 
-    console.log("Mengirim Payload:", payload); // Cek console buat debugging
+    console.log("Payload:", payload);
 
     try {
         const response = await fetch('http://127.0.0.1:8000/api/transactions', { 
@@ -106,8 +110,6 @@ export default function BookingCheckout() {
 
         if (response.ok) {
             await clearCart(token);
-
-            // Siapkan data untuk halaman Receipt
             const receiptData = {
                 doctor: isDoctorConsultation ? state.doctor : null,
                 items: isMedicinePurchase ? state.items : [],
@@ -120,7 +122,7 @@ export default function BookingCheckout() {
 
         } else {
             console.error("Gagal backend:", result);
-            alert(`Gagal Transaksi: ${result.message || "Database menolak data (Cek Foreign Key)."}`);
+            alert(`Gagal Transaksi: ${result.message || "Database menolak data."}`);
         }
 
     } catch (error) {
@@ -163,11 +165,17 @@ export default function BookingCheckout() {
                     </h3>
 
                     {isDoctorConsultation && (
-                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                            <img src={getImageUrl(state.doctor.image)} style={{ width: '70px', height: '70px', borderRadius: '12px', objectFit: 'cover' }} onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"}/>
-                            <div>
-                                <h4 style={{ margin: '0 0 5px', fontSize: '18px', fontWeight: 'bold' }}>{state.doctor.user?.name || state.doctor.name}</h4>
-                                <span style={{ background: '#e0f2fe', color: mainBlue, padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>{state.doctor.specialist || state.doctor.specialization}</span>
+                        <div>
+                            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                                <img src={getImageUrl(state.doctor.image)} style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"}/>
+                                <div>
+                                    <h4 style={{ margin: '0 0 5px', fontSize: '18px', fontWeight: 'bold' }}>{state.doctor.user?.name || state.doctor.name}</h4>
+                                    <span style={{ background: '#e0f2fe', color: mainBlue, padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>{state.doctor.specialist || state.doctor.specialization}</span>
+                                </div>
+                            </div>
+                            {/* 🔥 INPUT TANGGAL DIHAPUS, GANTI JADI INFO SIMPEL */}
+                            <div style={{ marginTop: '20px', padding: '15px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', fontSize: '13px', color: '#0369a1' }}>
+                                <p style={{ margin: 0 }}><strong>Info:</strong> Sesi konsultasi (Chat) akan aktif setelah pembayaran diverifikasi.</p>
                             </div>
                         </div>
                     )}

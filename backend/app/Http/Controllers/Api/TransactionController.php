@@ -4,41 +4,63 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\Medicine; // 🔥 [WAJIB] Jangan lupa baris ini! Kalau ga ada, dia bingung obat itu apa.
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; 
 
 class TransactionController extends Controller
 {
+    // 1. BUAT TRANSAKSI (User Beli)
     public function store(Request $request)
     {
+        // Validasi
         $request->validate([
             'amount' => 'required|numeric',
-            'doctor_id' => 'nullable', 
             'type' => 'nullable|string',
-            'note' => 'nullable|string',
-            'status' => 'nullable|string'
+            'items' => 'nullable|array', // Pastikan items array diterima
         ]);
 
-        $transaction = Transaction::create([
-            'user_id' => Auth::id(),
-            'doctor_id' => $request->doctor_id,
-            'amount' => $request->amount,
-            'payment_method' => $request->payment_method ?? 'gopay',
-            'status' => $request->status ?? 'pending',
-            'type' => $request->type ?? 'consultation',
-            'note' => $request->note, 
-        ]);
+        // Pakai DB Transaction biar aman (Kalau stok gagal kurang, transaksi batal)
+        return DB::transaction(function () use ($request) {
+            
+            // A. Simpan Transaksi ke Tabel transactions
+            $transaction = Transaction::create([
+                'user_id' => Auth::id(),
+                'doctor_id' => $request->doctor_id, // Bisa null
+                'amount' => $request->amount,
+                'payment_method' => $request->payment_method ?? 'gopay',
+                'status' => 'success', // Langsung success biar gampang
+                'type' => $request->type ?? 'consultation',
+                'note' => $request->note,
+            ]);
 
-        return response()->json([
-            'message' => 'Transaksi berhasil dibuat',
-            'data' => $transaction
-        ], 201);
+            // B. 🔥 LOGIKA PENGURANGAN STOK (INI KUNCINYA)
+            // Cek: Apakah tipe transaksinya 'medicine'? Dan ada barangnya?
+            if ($request->type === 'medicine' && !empty($request->items)) {
+                
+                foreach ($request->items as $item) {
+                    // 1. Cari obat berdasarkan ID yang dikirim frontend
+                    $medicine = Medicine::find($item['id']);
+                    
+                    // 2. Kalau obat ketemu, kurangi stoknya
+                    if ($medicine) {
+                        // Kurangi stok sebanyak quantity pembelian
+                        $medicine->decrement('stock', $item['quantity']);
+                    }
+                }
+            }
+
+            return response()->json([
+                'message' => 'Transaksi berhasil & Stok berkurang!',
+                'data' => $transaction
+            ], 201);
+        });
     }
 
-    // Admin Lihat Semua
+    // 2. Dashboard Admin & List Transaksi
     public function index()
     {
-        // 🔥 Tambahkan 'doctorData' di with()
         $transactions = Transaction::with(['user', 'doctor', 'doctorData'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -46,21 +68,20 @@ class TransactionController extends Controller
         return response()->json(['data' => $transactions]);
     }
 
-    // User Lihat History
+    // 3. History User
     public function history()
     {
-        // 🔥 Tambahkan 'doctorData' di with() biar fotonya kebawa
         $transactions = Transaction::where('user_id', Auth::id())
             ->with(['doctor', 'doctorData']) 
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'desc') 
             ->get();
 
         return response()->json(['data' => $transactions]);
     }
 
+    // 4. Update Status (Admin)
     public function update(Request $request, $id)
     {
-        $request->validate(['status' => 'required']);
         $transaction = Transaction::findOrFail($id);
         $transaction->update(['status' => $request->status]);
         return response()->json(['data' => $transaction]);
