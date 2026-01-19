@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,46 +9,38 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory,HasApiTokens, Notifiable;
+    use HasFactory, HasApiTokens, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'gender',      
-    'birth_date',  
-    'phone',       
-    'height',      
-    'weight',      
+        'name',
+        'email',
+        'password',
+        'gender',      
+        'birth_date',  
+        'phone',       
+        'height',      
+        'weight',
+        'role', // 🔥 WAJIB ADA BIAR BISA REGISTER DOKTER
+        'image', // 🔥 TAMBAHKAN INI JUGA BIAR FOTO BISA KESIMPAN
     ];    
 
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // 🔥 TAMBAHKAN RELASI INI (WAJIB BANGET)
+    // Biar load('doctor') di api.php bisa jalan
+    public function doctor()
+    {
+        return $this->hasOne(Doctor::class, 'user_id');
     }
 }

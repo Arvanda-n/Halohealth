@@ -9,17 +9,27 @@ class Doctor extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'user_id',
         'specialization',
-        'consultation_fee',
-        'experience_years',
+        'sip',
+        'hospital',
+        'experience_years', // Sesuai dengan kolom di database Anda
         'image',
-        'is_online'
+        'consultation_fee', // Sesuai dengan kolom di database Anda
     ];
 
+    /**
+     * Relasi ke model User.
+     * Nama dokter dan data login diambil dari tabel users.
+     */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class);
     }
 }

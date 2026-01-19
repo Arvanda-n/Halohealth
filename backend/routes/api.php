@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Route;
 // CONTROLLERS
 // =====================
 
-// Auth & Public
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MedicineController;
 use App\Http\Controllers\Api\DoctorController;
@@ -20,19 +19,20 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\HealthCategoryController;
 use App\Http\Controllers\Api\HealthServiceController;
-
 // Admin Namespace
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\OrderController;
+use App\Http\Controllers\Api\AdminController; 
 
 /*
 |--------------------------------------------------------------------------
-| 1. PUBLIC ROUTES
+| 1. PUBLIC ROUTES (Bisa diakses tanpa login)
 |--------------------------------------------------------------------------
 */
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/admin/login', [AdminController::class, 'login']);
 
 // Resources Master Data
 Route::apiResource('/medicines', MedicineController::class);
@@ -46,44 +46,43 @@ Route::get('/health-services', [HealthServiceController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
-| 2. PROTECTED ROUTES (auth:sanctum)
+| 2. PROTECTED ROUTES (Butuh Login / auth:sanctum)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    // User Profile & Logout
+    // 🔥 PERBAIKAN: User Profile & Logout (Memuat relasi doctor)
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        // Mengambil data user sekaligus data detail dari tabel doctors
+        return $request->user()->load('doctor');
     });
+    Route::get('/users/{id}', [UserController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
 
     // --- 🛒 KERANJANG ---
     Route::apiResource('/carts', CartController::class);
 
-    // --- 💬 KONSULTASI & CHAT ---
+    // --- 💬 KONSULTASI ---
     Route::post('/consultations', [ConsultationController::class, 'store']);
     Route::get('/consultations', [ConsultationController::class, 'index']);
     Route::put('/consultations/{id}', [ConsultationController::class, 'update']);
     
-    Route::post('/chat/send', [ChatController::class, 'send']);
-    Route::get('/chat/{userId}', [ChatController::class, 'conversation']);
+    // --- 💬 CHAT ---
+    // 1. History Chat (Dashboard)
+    Route::get('/chat/history', [ChatController::class, 'getChatHistory']);
+    
+    // 2. Kirim Pesan
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    
+    // 3. Ambil Pesan Detail (Wildcard di bawah)
+    Route::get('/chat/{user_id}', [ChatController::class, 'getMessages']);
 
-    // --- 💳 TRANSAKSI (GABUNGAN USER & ADMIN) ---
-    // 🔥 REVISI DISINI: URL disesuaikan dengan Frontend ('/api/transactions')
-    
-    // 1. User Beli (Create)
+
+    // --- 💳 TRANSAKSI ---
     Route::post('/transactions', [TransactionController::class, 'store']);
-    
-    // 2. User Lihat History
     Route::get('/transactions/history', [TransactionController::class, 'history']); 
-    
-    // 3. Admin Lihat Semua (Dashboard / Pesanan Obat)
-    // Hapus '/admin' biar cocok sama frontend fetch('.../api/transactions')
     Route::get('/transactions', [TransactionController::class, 'index']); 
-    
-    // 4. Admin Update Status (Terima/Tolak)
-    // Hapus '/admin' biar cocok sama frontend fetch('.../api/transactions/{id}')
     Route::put('/transactions/{id}', [TransactionController::class, 'update']);
 
     /*
@@ -102,19 +101,19 @@ Route::middleware('auth:sanctum')->group(function () {
         
         Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
         Route::post('/admin/create', [AuthController::class, 'createAdmin']);
+        
+        // 🔥 TAMBAHAN: Route khusus untuk Admin mendaftarkan Dokter agar role otomatis sesuai
+        Route::post('/admin/doctors', [AuthController::class, 'registerDoctor']);
 
-        // --- BOOKING DOKTER (Khusus Admin Booking) ---
-        // Kalau mau spesifik booking dokter
+        // --- BOOKING DOKTER ---
         Route::get('/admin/bookings', [TransactionController::class, 'bookings']);
         
         // --- MANAGEMENT LAINNYA ---
         Route::apiResource('/admin/orders', OrderController::class);
 
-        // Health Management (Admin Access)
+        // Health Management
         Route::post('/health-categories', [HealthCategoryController::class, 'store']);
         Route::post('/health-services', [HealthServiceController::class, 'store']);
     });
-});
 
-// Admin Login Manual
-Route::post('/admin/login', [App\Http\Controllers\Api\AdminController::class, 'login']);
+});
