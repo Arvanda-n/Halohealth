@@ -4,70 +4,86 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\Medicine; // 🔥 [WAJIB] Jangan lupa baris ini! Kalau ga ada, dia bingung obat itu apa.
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; 
 
 class TransactionController extends Controller
 {
-    // 1. Pasien membuat transaksi (Checkout)
+    // 1. BUAT TRANSAKSI (User Beli)
     public function store(Request $request)
     {
+        // Validasi
         $request->validate([
-            'doctor_id' => 'required|exists:users,id',
-            'amount' => 'required|numeric'
+            'amount' => 'required|numeric',
+            'type' => 'nullable|string',
+            'items' => 'nullable|array', // Pastikan items array diterima
         ]);
 
-        $transaction = Transaction::create([
-            'patient_id' => auth()->id(),
-            'doctor_id' => $request->doctor_id,
-            'amount' => $request->amount,
+        // Pakai DB Transaction biar aman (Kalau stok gagal kurang, transaksi batal)
+        return DB::transaction(function () use ($request) {
             
-            // 🔥 REVISI PENTING:
-            // Ubah jadi 'pending' biar tombol chat terkunci dulu sebelum diapprove Admin
-            'status' => 'pending' 
-        ]);
+            // A. Simpan Transaksi ke Tabel transactions
+            $transaction = Transaction::create([
+                'user_id' => Auth::id(),
+                'doctor_id' => $request->doctor_id, // Bisa null
+                'amount' => $request->amount,
+                'payment_method' => $request->payment_method ?? 'gopay',
+                'status' => 'success', // Langsung success biar gampang
+                'type' => $request->type ?? 'consultation',
+                'note' => $request->note,
+            ]);
 
-        return response()->json($transaction, 201);
+            // B. 🔥 LOGIKA PENGURANGAN STOK (INI KUNCINYA)
+            // Cek: Apakah tipe transaksinya 'medicine'? Dan ada barangnya?
+            if ($request->type === 'medicine' && !empty($request->items)) {
+                
+                foreach ($request->items as $item) {
+                    // 1. Cari obat berdasarkan ID yang dikirim frontend
+                    $medicine = Medicine::find($item['id']);
+                    
+                    // 2. Kalau obat ketemu, kurangi stoknya
+                    if ($medicine) {
+                        // Kurangi stok sebanyak quantity pembelian
+                        $medicine->decrement('stock', $item['quantity']);
+                    }
+                }
+            }
+
+            return response()->json([
+                'message' => 'Transaksi berhasil & Stok berkurang!',
+                'data' => $transaction
+            ], 201);
+        });
     }
 
-    // 2. Admin lihat semua transaksi
+    // 2. Dashboard Admin & List Transaksi
     public function index()
     {
-        // Ditambah orderBy desc biar transaksi terbaru muncul paling atas
-        return Transaction::with(['patient', 'doctor'])
+        $transactions = Transaction::with(['user', 'doctor', 'doctorData'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        return response()->json(['data' => $transactions]);
     }
 
-    // 3. History Transaksi per User (Profil Pasien)
+    // 3. History User
     public function history()
     {
-        $transactions = Transaction::where('patient_id', auth()->id())
-            ->with(['doctor']) 
+        $transactions = Transaction::where('user_id', Auth::id())
+            ->with(['doctor', 'doctorData']) 
             ->orderBy('created_at', 'desc') 
             ->get();
 
-        return response()->json($transactions);
+        return response()->json(['data' => $transactions]);
     }
 
-    // 🔥 4. FITUR BARU: Update Status Transaksi (Dipakai Admin)
+    // 4. Update Status (Admin)
     public function update(Request $request, $id)
     {
-        // Validasi input status
-        $request->validate([
-            'status' => 'required|in:pending,success,failed,completed'
-        ]);
-
-        // Cari transaksi, kalau gak ada error 404
         $transaction = Transaction::findOrFail($id);
-
-        // Update statusnya
-        $transaction->update([
-            'status' => $request->status
-        ]);
-
-        return response()->json([
-            'message' => 'Status transaksi berhasil diperbarui',
-            'data' => $transaction
-        ]);
+        $transaction->update(['status' => $request->status]);
+        return response()->json(['data' => $transaction]);
     }
 }

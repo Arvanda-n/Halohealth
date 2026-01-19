@@ -11,6 +11,7 @@ export default function AdminMedicines() {
     try {
         const response = await fetch('http://127.0.0.1:8000/api/medicines');
         const result = await response.json();
+        // Handle potentially different response structures
         const dataArray = result.data ? result.data : result;
         setMedicines(Array.isArray(dataArray) ? dataArray : []);
     } catch (error) {
@@ -30,8 +31,10 @@ export default function AdminMedicines() {
         if(response.ok) {
             alert("Obat berhasil dihapus");
             fetchMedicines();
+        } else {
+             alert("Gagal menghapus obat");
         }
-    } catch (error) { alert("Gagal menghapus"); }
+    } catch (error) { alert("Terjadi kesalahan saat menghapus"); }
   };
 
   const filteredMedicines = medicines.filter(item => 
@@ -39,9 +42,11 @@ export default function AdminMedicines() {
     item.category.toLowerCase().includes(search.toLowerCase())
   );
 
+  // 🔥 FIX IMAGE URL LOGIC
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath; 
+    // Ensure correct slash handling
     return `http://127.0.0.1:8000/${imagePath.replace(/^\//, '')}`;
   };
 
@@ -86,7 +91,12 @@ export default function AdminMedicines() {
                                 <td style={{ padding:'16px', display:'flex', alignItems:'center', gap:'12px' }}>
                                     <div style={{ width:'45px', height:'45px', borderRadius:'8px', background:'#f1f5f9', overflow:'hidden', display:'flex', justifyContent:'center', alignItems:'center' }}>
                                         {item.image ? (
-                                            <img src={getImageUrl(item.image)} alt="med" style={{ width:'100%', height:'100%', objectFit:'contain' }} />
+                                            <img 
+                                                src={getImageUrl(item.image)} 
+                                                alt="med" 
+                                                style={{ width:'100%', height:'100%', objectFit:'contain' }} 
+                                                onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/150x150?text=No+Image"; }} // Fallback image
+                                            />
                                         ) : ( <Pill size={20} color="#94a3b8" /> )}
                                     </div>
                                     <div style={{ fontWeight:'600', color:'#1e293b' }}>{item.name}</div>
@@ -102,12 +112,12 @@ export default function AdminMedicines() {
                                     </div>
                                 </td>
                                 <td style={{ padding:'16px', fontWeight:'bold', color:'#0ea5e9' }}>
-                                    Rp {item.price.toLocaleString()}
+                                    Rp {parseInt(item.price).toLocaleString('id-ID')}
                                 </td>
                                 <td style={{ padding:'16px', textAlign:'center' }}>
                                     <div style={{ display:'flex', justifyContent:'center', gap:'8px' }}>
-                                        <Link to={`/admin/medicines/edit/${item.id}`} style={{ background:'#e0f2fe', padding:'8px', borderRadius:'6px', color:'#0284c7' }}><Pencil size={16} /></Link>
-                                        <button onClick={() => handleDelete(item.id)} style={{ background:'#fee2e2', border:'none', padding:'8px', borderRadius:'6px', cursor:'pointer', color:'#ef4444' }}><Trash2 size={16} /></button>
+                                        <Link to={`/admin/medicines/edit/${item.id}`} style={{ background:'#e0f2fe', padding:'8px', borderRadius:'6px', color:'#0284c7', display: 'flex', alignItems: 'center' }}><Pencil size={16} /></Link>
+                                        <button onClick={() => handleDelete(item.id)} style={{ background:'#fee2e2', border:'none', padding:'8px', borderRadius:'6px', cursor:'pointer', color:'#ef4444', display: 'flex', alignItems: 'center' }}><Trash2 size={16} /></button>
                                     </div>
                                 </td>
                             </tr>

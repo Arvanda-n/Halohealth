@@ -1,41 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Tambah useLocation
-import { Send, ChevronLeft, MoreVertical, Loader2 } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Send, ChevronLeft, MoreVertical, Loader2, Plus } from 'lucide-react';
 
 export default function Chat() {
-    const { receiverId } = useParams();
+    const { receiverId } = useParams(); // ID User lawan bicara
     const navigate = useNavigate();
-    const location = useLocation(); // Buat nangkep data dari halaman sebelumnya
+    const location = useLocation();
     
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
-    
-    // 🔥 LOGIKA BARU: Cek apakah data dokter dikirim lewat navigate? Kalau ada pake itu, kalau gak ada baru null.
     const [receiverProfile, setReceiverProfile] = useState(location.state?.doctor || null); 
     
     const scrollRef = useRef();
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if(!token) return navigate('/login');
 
-        // 1. Ambil data diri sendiri
-        fetch('http://127.0.0.1:8000/api/user', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(res => res.json())
-        .then(data => setCurrentUser(data));
+        // 1. Ambil data diri
+        fetch('http://127.0.0.1:8000/api/user', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => setCurrentUser(data));
 
-        // 2. Kalau profil dokter belum ada (gak dikirim dari halaman sebelah), coba fetch manual
-        if (!receiverProfile) {
+        // 2. Fetch data lawan bicara kalau belum ada
+        if (!receiverProfile || (receiverProfile.id != receiverId && receiverProfile.user_id != receiverId)) {
             fetchReceiverProfile(token);
         }
 
-        // 3. Ambil Pesan & Polling
+        // 3. Load Chat & Auto Refresh (Polling)
         fetchMessages();
-        const interval = setInterval(fetchMessages, 3000);
+        const interval = setInterval(fetchMessages, 3000); // Cek pesan baru tiap 3 detik
         return () => clearInterval(interval);
     }, [receiverId]);
 
@@ -43,44 +40,38 @@ export default function Chat() {
         scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // Fungsi Fetch Profil (Jaga-jaga kalau endpointnya beda)
     const fetchReceiverProfile = async (token) => {
         try {
-            // Coba ambil data user/dokter berdasarkan ID
             const response = await fetch(`http://127.0.0.1:8000/api/users/${receiverId}`, { 
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${token}` } 
             });
-            
             if (response.ok) {
                 const data = await response.json();
-                setReceiverProfile(data);
-            } else {
-                // Kalau gagal fetch, set nama default biar gak loading terus
-                setReceiverProfile({ name: "Dokter", image: null });
+                setReceiverProfile(data.data || data); 
             }
-        } catch (error) {
-            console.log("Gagal load profil", error);
-            setReceiverProfile({ name: "Dokter", image: null });
-        }
+        } catch (error) { console.log("Error profil", error); }
     };
 
     const fetchMessages = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://127.0.0.1:8000/api/chat/${receiverId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const response = await fetch(`http://127.0.0.1:8000/api/chat/${receiverId}`, { 
+                headers: { 'Authorization': `Bearer ${token}` } 
             });
             const data = await response.json();
+            // Validasi array biar gak error map
             setMessages(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error("Error fetching chat:", err);
+            console.error("Error fetch chat:", err);
         } finally {
             setLoading(false);
         }
     };
 
+    // 🔥 LOGIC KIRIM PESAN (FIXED)
     const handleSendMessage = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Mencegah reload halaman
+        
         if (!newMessage.trim()) return;
 
         try {
@@ -91,135 +82,118 @@ export default function Chat() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
+                // Pastikan receiver_id dikirim sebagai Angka (Integer)
                 body: JSON.stringify({
-                    receiver_id: receiverId,
+                    receiver_id: parseInt(receiverId), 
                     message: newMessage
                 })
             });
 
             if (response.ok) {
-                setNewMessage("");
-                fetchMessages();
+                setNewMessage(""); // Kosongkan input
+                fetchMessages();   // Tarik pesan baru segera
+            } else {
+                console.error("Gagal kirim pesan");
             }
         } catch (err) {
-            console.error("Error sending message:", err);
+            console.error("Error koneksi:", err);
         }
     };
 
+    // Helper Foto
+    const getProfileImage = () => {
+        let imagePath = receiverProfile?.image || receiverProfile?.user?.image || receiverProfile?.photo;
+        if (!imagePath) return "https://cdn-icons-png.flaticon.com/512/3774/3774299.png";
+        if (imagePath.startsWith('http')) return imagePath;
+        return `http://127.0.0.1:8000/storage/${imagePath.replace(/^\//, '')}`;
+    };
+
+    const getName = () => receiverProfile?.name || receiverProfile?.user?.name || "Dokter";
+
+    // STYLE FULL WIDTH
     const styles = {
-        container: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#e5ddd5', fontFamily: '"Inter", sans-serif' },
-        subHeader: {
-            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
-            background: '#ffffff', height: '70px',
-            display: 'flex', alignItems: 'center', gap: '15px', padding: '0 15px',
-            borderBottom: '1px solid #ddd', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+        page: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#ffffff', fontFamily: '"Inter", sans-serif' },
+        header: { 
+            flexShrink: 0, height: '70px', background: 'white', display: 'flex', alignItems: 'center', gap: '15px', padding: '0 20px', 
+            borderBottom: '1px solid #f1f5f9', zIndex:10 
         },
-        avatarBox: { width: '45px', height: '45px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' },
-        avatarImg: { width: '100%', height: '100%', objectFit: 'cover' },
-        chatBody: {
-            flex: 1, marginTop: '70px', marginBottom: '70px', overflowY: 'auto', padding: '20px',
-            display: 'flex', flexDirection: 'column', gap: '8px', background: '#efe7dd'
+        avatar: { width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #e2e8f0' },
+        body: { flexGrow: 1, overflowY: 'auto', padding: '20px 5%', display: 'flex', flexDirection: 'column', gap: '10px', background: 'white' },
+        
+        // FOOTER FULL WIDTH
+        footer: { 
+            flexShrink: 0, background: 'white', padding: '20px 0', width: '100%', borderTop: '1px solid #f1f5f9'
         },
-        bubble: (isMe) => ({
-            maxWidth: '75%', padding: '10px 14px', borderRadius: '12px',
-            borderTopRightRadius: isMe ? '0' : '12px',
-            borderTopLeftRadius: isMe ? '12px' : '0',
-            background: isMe ? '#d9fdd3' : '#ffffff',
-            color: '#111b21', fontSize: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-            position: 'relative', wordWrap: 'break-word'
-        }),
-        time: { fontSize: '10px', color: '#999', marginTop: '4px', textAlign: 'right', display: 'block' },
-        inputArea: {
-            position: 'fixed', bottom: 0, left: 0, right: 0, background: '#f0f2f5',
-            padding: '10px 15px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 60
+        form: {
+            display: 'flex', width: '100%', alignItems: 'center'
         },
-        // 🔥 FIX TOMBOL SEND
-        sendButton: { 
-            background: '#00a884', 
-            border: 'none', 
-            width: '45px', 
-            height: '45px', 
-            borderRadius: '50%', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            cursor: 'pointer', 
-            color: 'white',
-            padding: 0, // Hapus padding biar icon bener-bener di tengah
-            flexShrink: 0 
-        }
+        inputContainer: { 
+            background: '#f0f4f9', borderRadius: '50px', display: 'flex', alignItems: 'center', padding: '12px 25px', 
+            margin: '0 20px', flex: 1 
+        },
+        input: { flex: 1, border: 'none', outline: 'none', fontSize: '16px', marginLeft: '10px', background: 'transparent', color:'#1e293b' },
+        iconBtn: { background:'none', border:'none', cursor:'pointer', color:'#64748b', display:'flex', alignItems:'center' },
+        sendBtn: { background:'none', border:'none', cursor:'pointer', color:'#0ea5e9', display:'flex', alignItems:'center', marginLeft:'10px' },
+        
+        bubbleUser: { maxWidth: '75%', padding: '12px 18px', borderRadius: '20px', borderBottomRightRadius: '4px', background: '#0ea5e9', color: 'white', alignSelf: 'flex-end', fontSize: '15px' },
+        bubblePartner: { maxWidth: '75%', padding: '12px 18px', borderRadius: '20px', borderBottomLeftRadius: '4px', background: '#f1f5f9', color: '#1e293b', alignSelf: 'flex-start', fontSize: '15px' },
+        time: { fontSize: '10px', opacity: 0.7, marginTop: '4px', display:'block', textAlign: 'right' }
     };
 
     return (
-        <div style={styles.container}>
-            {/* HEADER */}
-            <div style={styles.subHeader}>
-                <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}>
-                    <ChevronLeft size={26} color="#54656f" />
-                </button>
-                
-                <div style={styles.avatarBox}>
-                    <img 
-                        src={receiverProfile?.image ? `http://127.0.0.1:8000${receiverProfile.image}` : "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"} 
-                        alt="Profile" style={styles.avatarImg}
-                        onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"}
-                    />
-                </div>
-                
-                <div style={{ flex: 1, cursor:'pointer' }}>
-                    {/* Jika nama belum ke-load, tampilkan "Dokter" */}
-                    <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111b21' }}>
-                        {receiverProfile?.name || "Dokter"}
-                    </h2>
-                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Online</p>
-                </div>
+        <div style={styles.page}>
+            <input type="file" ref={fileInputRef} style={{display:'none'}} />
 
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                    <MoreVertical size={22} color="#54656f" />
-                </button>
+            {/* HEADER */}
+            <div style={styles.header}>
+                <button onClick={() => navigate(-1)} style={{background:'none', border:'none', cursor:'pointer', color:'#64748b'}}><ChevronLeft size={28}/></button>
+                <img src={getProfileImage()} alt="Profile" style={styles.avatar} onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/3774/3774299.png"}/>
+                <div style={{flex:1}}>
+                    <h3 style={{margin:0, fontSize:'16px', fontWeight:'700', color:'#1e293b'}}>{getName()}</h3>
+                    <span style={{fontSize:'12px', color:'#10b981', fontWeight:'500'}}>Online</span>
+                </div>
+                <MoreVertical size={24} color="#64748b"/>
             </div>
 
             {/* CHAT BODY */}
-            <div style={styles.chatBody}>
-                {loading && <div style={{ textAlign:'center', marginTop:'20px' }}><Loader2 className="animate-spin inline text-gray-400"/></div>}
-                
-                {/* Pesan default kalau chat masih kosong */}
+            <div style={styles.body}>
+                {loading && <div style={{textAlign:'center', marginTop:'20px'}}><Loader2 className="animate-spin inline text-gray-300"/></div>}
                 {!loading && messages.length === 0 && (
-                    <div style={{ textAlign:'center', marginTop:'50px', color:'#8696a0', fontSize:'13px', background:'rgba(255,255,255,0.9)', padding:'10px 20px', borderRadius:'20px', width:'fit-content', margin:'50px auto' }}>
-                        Mulai konsultasi dengan <b>{receiverProfile?.name || "Dokter"}</b>.
+                    <div style={{textAlign:'center', margin:'auto', color:'#94a3b8', fontSize:'14px'}}>
+                        Mulai percakapan baru.
                     </div>
                 )}
-
-                {messages.map((msg, index) => {
+                {messages.map((msg, i) => {
                     const isMe = msg.sender_id === currentUser?.id;
                     return (
-                        <div key={index} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
-                            <div style={styles.bubble(isMe)}>
-                                {msg.message}
-                                <span style={styles.time}>
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            </div>
+                        <div key={i} style={isMe ? styles.bubbleUser : styles.bubblePartner}>
+                            {msg.message}
+                            <span style={styles.time}>{new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                         </div>
                     );
                 })}
-                <div ref={scrollRef} />
+                <div ref={scrollRef}></div>
             </div>
 
-            {/* INPUT */}
-            <form onSubmit={handleSendMessage} style={styles.inputArea}>
-                <input 
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Ketik pesan..."
-                    style={{ flex: 1, padding: '12px 20px', borderRadius: '25px', border: 'none', outline: 'none', fontSize: '15px', background:'white' }}
-                />
-                <button type="submit" disabled={!newMessage.trim()} style={styles.sendButton}>
-                    {/* Size diperbesar dikit biar pas */}
-                    <Send size={22} style={{ marginLeft: '2px' }} /> 
-                </button>
-            </form>
+            {/* FOOTER PAKE FORM BIAR ENTER JALAN */}
+            <div style={styles.footer}>
+                <form onSubmit={handleSendMessage} style={styles.form}>
+                    <div style={styles.inputContainer}>
+                        <button type="button" style={styles.iconBtn} onClick={() => fileInputRef.current.click()}>
+                            <Plus size={24}/>
+                        </button>
+                        <input 
+                            value={newMessage} 
+                            onChange={e => setNewMessage(e.target.value)} 
+                            placeholder="Ketik pesan..." 
+                            style={styles.input} 
+                        />
+                        <button type="submit" disabled={!newMessage.trim()} style={styles.sendBtn}>
+                            <Send size={26}/> 
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 }

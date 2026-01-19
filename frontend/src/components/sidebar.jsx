@@ -12,12 +12,10 @@ import {
   ChevronRight,
   Home as HomeIcon,
   MessageCircle,
-  Clock,
-  CreditCard // Icon baru buat Transaksi
+  Clock
 } from 'lucide-react';
 
 // === 1. SIDEBAR KHUSUS ADMIN ===
-// (Harus pakai "export" biasa, bukan default)
 export function SidebarAdmin() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,8 +33,7 @@ export function SidebarAdmin() {
     ]},
     { group: "TRANSAKSI", items: [
       { name: 'Pesanan Obat', icon: <ShoppingCart size={20} />, path: '/admin/orders' },
-      // 🔥 MENU PENTING BUAT VERIFIKASI PEMBAYARAN
-      { name: 'Verifikasi Bayar', icon: <CreditCard size={20} />, path: '/admin/transactions' },
+      // 🔥 VERIFIKASI BAYAR SUDAH DIHAPUS (Karena sudah gabung di Orders & Booking)
       { name: 'Booking Dokter', icon: <CalendarCheck size={20} />, path: '/admin/bookings' },
     ]},
     { group: "USER MANAGEMENT", items: [
@@ -93,7 +90,6 @@ export function SidebarAdmin() {
 }
 
 // === 2. SIDEBAR BIASA (USER) ===
-// (Ini Default Export, dipakai di halaman User)
 export default function Sidebar() {
   const location = useLocation();
   return (

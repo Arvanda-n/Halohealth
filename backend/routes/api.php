@@ -56,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
 
     // --- 🛒 KERANJANG ---
     Route::apiResource('/carts', CartController::class);
@@ -68,9 +69,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chat/send', [ChatController::class, 'send']);
     Route::get('/chat/{userId}', [ChatController::class, 'conversation']);
 
-    // --- 💳 TRANSAKSI (USER) ---
+    // --- 💳 TRANSAKSI (GABUNGAN USER & ADMIN) ---
+    // 🔥 REVISI DISINI: URL disesuaikan dengan Frontend ('/api/transactions')
+    
+    // 1. User Beli (Create)
     Route::post('/transactions', [TransactionController::class, 'store']);
-    Route::get('/transactions/history', [TransactionController::class, 'history']); // Fitur History User
+    
+    // 2. User Lihat History
+    Route::get('/transactions/history', [TransactionController::class, 'history']); 
+    
+    // 3. Admin Lihat Semua (Dashboard / Pesanan Obat)
+    // Hapus '/admin' biar cocok sama frontend fetch('.../api/transactions')
+    Route::get('/transactions', [TransactionController::class, 'index']); 
+    
+    // 4. Admin Update Status (Terima/Tolak)
+    // Hapus '/admin' biar cocok sama frontend fetch('.../api/transactions/{id}')
+    Route::put('/transactions/{id}', [TransactionController::class, 'update']);
 
     /*
     |--------------------------------------------------------------------------
@@ -83,25 +97,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);
 
         // --- MANAGEMENT USER ---
-        // Override index user agar bisa filter admin vs patient
-        // (Pastikan method indexAdmin ada di UserController)
         Route::get('/admin/users', [UserController::class, 'indexAdmin']); 
-        Route::apiResource('/admin/users', UserController::class); // Fallback resource
+        Route::apiResource('/admin/users', UserController::class); 
         
         Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
         Route::post('/admin/create', [AuthController::class, 'createAdmin']);
 
-        // --- TRANSAKSI & BOOKING (PENTING!) ---
-        
-        // 1. Verifikasi Pembayaran (Update Status: Pending -> Success)
-        Route::put('/admin/transactions/{id}', [TransactionController::class, 'update']);
-        
-        // 2. Booking Dokter (Ambil dari transaksi yang sudah sukses)
+        // --- BOOKING DOKTER (Khusus Admin Booking) ---
+        // Kalau mau spesifik booking dokter
         Route::get('/admin/bookings', [TransactionController::class, 'bookings']);
         
-        // 3. List Semua Transaksi
-        Route::get('/admin/transactions', [TransactionController::class, 'index']);
-
         // --- MANAGEMENT LAINNYA ---
         Route::apiResource('/admin/orders', OrderController::class);
 
@@ -111,5 +116,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-// Admin Login Manual (Jika tidak via AuthController)
+// Admin Login Manual
 Route::post('/admin/login', [App\Http\Controllers\Api\AdminController::class, 'login']);

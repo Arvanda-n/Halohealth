@@ -8,6 +8,9 @@ export default function AdminDoctorEdit() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
+const SPECIALIZATIONS = [
+      'Dokter Umum', 'Spesialis Anak','Spesialis Kulit', 'Penyakit Dalam', 'Spesialis Kandungan', 'Spesialis THT', 'Kesehatan Jiwa','Dokter Gigi', 'Dokter Hewan',  'Spesialis Mata', 'Spesialis Jantung'
+  ];
   // State Form
   const [formData, setFormData] = useState({
     name: '',
@@ -170,18 +173,14 @@ export default function AdminDoctorEdit() {
 
                 <div style={{ marginBottom:'15px' }}>
                     <label style={{ display:'block', marginBottom:'8px', fontWeight:'600', color:'#334155' }}>Spesialisasi</label>
-                    <select name="specialization" value={formData.specialization} onChange={handleChange}
+                        <select name="specialization" value={formData.specialization} onChange={handleChange}
                         style={{ width:'100%', padding:'12px', borderRadius:'8px', border:'1px solid #e2e8f0', background:'white' }}>
-                        <option value="Umum">Dokter Umum</option>
-                        <option value="Gigi">Dokter Gigi</option>
-                        <option value="Anak">Spesialis Anak</option>
-                        <option value="Kandungan">Spesialis Kandungan</option>
-                        <option value="Bedah">Spesialis Bedah</option>
-                        <option value="Kulit">Spesialis Kulit</option>
-                        <option value="Saraf">Spesialis Saraf</option>
-                        <option value="Penyakit Dalam">Penyakit Dalam</option>
-                        <option value="Mata">Spesialis Mata</option>
-                        <option value="THT">Spesialis THT</option>
+                        
+                        {/* 🔥 GANTI ISI OPTION DENGAN INI BIAR SINKRON 🔥 */}
+                        {SPECIALIZATIONS.map((spec) => (
+                            <option key={spec} value={spec}>{spec}</option>
+                        ))}
+
                     </select>
                 </div>
 

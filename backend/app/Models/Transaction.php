@@ -10,27 +10,26 @@ class Transaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id',
-        'doctor_id',
-        'amount',
-        'status',
-        'payment_method' // Opsional: kalau abang mau simpan metode bayarnya juga
+        'user_id', 'doctor_id', 'amount', 'status', 
+        'payment_method', 'type', 'note'
     ];
 
-    /**
-     * Relasi ke User sebagai Pasien (Pembeli)
-     */
-    public function patient()
+    // Relasi ke Pasien (User)
+    public function user()
     {
-        return $this->belongsTo(User::class, 'patient_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Relasi ke User sebagai Dokter (Penerima)
-     * Penting: Ini merujuk ke tabel 'users', karena doctor_id di transaksi = user_id dokter
-     */
+    // Relasi ke Dokter (User - Cuma Nama)
     public function doctor()
     {
         return $this->belongsTo(User::class, 'doctor_id');
+    }
+
+    // 🔥 TAMBAHAN BARU: Relasi ke Profile Dokter (Foto & Spesialis)
+    public function doctorData()
+    {
+        // Menghubungkan doctor_id (user_id di tabel doctors)
+        return $this->hasOne(Doctor::class, 'user_id', 'doctor_id');
     }
 }

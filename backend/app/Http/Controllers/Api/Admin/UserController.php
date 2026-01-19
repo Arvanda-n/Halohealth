@@ -9,21 +9,35 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // 🔍 LIST SEMUA USER
-    public function index()
+    // 🔥 [WAJIB ADA] UNTUK ADMIN USER LIST
+    // Ini dipanggil oleh Route::get('/admin/users')
+    public function indexAdmin()
     {
+        // Ambil semua user urut dari yang terbaru
+        $users = User::latest()->get();
+
         return response()->json([
-            'users' => User::all()
+            'success' => true,
+            'data' => $users
         ]);
     }
 
-    // ➕ TAMBAH USER
+    // 🔍 LIST SEMUA USER (Standar Resource)
+    public function index()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => User::all()
+        ]);
+    }
+
+    // ➕ TAMBAH USER (Admin Create)
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string',
             'email' => 'nullable|email|unique:users',
-            'phone' => 'required|string|unique:users',
+            'phone' => 'required|string|unique:users', // Pastikan tabel users punya kolom phone
             'password' => 'required|min:6',
             'role' => 'required|in:admin,patient,doctor'
         ]);
@@ -37,25 +51,35 @@ class UserController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'User berhasil dibuat',
-            'user' => $user
+            'data' => $user
         ], 201);
     }
 
     // 👁️ DETAIL USER
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
 
         return response()->json([
-            'user' => $user
+            'success' => true,
+            'data' => $user
         ]);
     }
 
     // ✏️ UPDATE USER
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
 
         $validated = $request->validate([
             'name' => 'sometimes|string',
@@ -72,18 +96,25 @@ class UserController extends Controller
         $user->update($validated);
 
         return response()->json([
+            'success' => true,
             'message' => 'User berhasil diupdate',
-            'user' => $user
+            'data' => $user
         ]);
     }
 
     // ❌ HAPUS USER
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+
         $user->delete();
 
         return response()->json([
+            'success' => true,
             'message' => 'User berhasil dihapus'
         ]);
     }
