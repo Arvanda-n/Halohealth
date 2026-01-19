@@ -8,7 +8,6 @@ import Medicines from './pages/Medicines';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 
-
 import Cart from './pages/Cart';
 import BookingCheckout from './pages/BookingCheckout';
 import Login from './pages/login';
@@ -17,23 +16,23 @@ import Register from './pages/Register';
 import Chat from './pages/Chat';
 import PaymentSuccess from './pages/PaymentSucces';
 import Consultation from './pages/Consultation';
-import PaymentReceipt from './pages/PaymentReceipt'
-import Profile from './pages/Profile' 
+import PaymentReceipt from './pages/PaymentReceipt';
+import Profile from './pages/Profile'; 
 
-
+// ===== DOKTER PAGES =====
+import DoctorDashboard from './pages/doctor/Dashboard'; // 🔥 NEW
 
 // ===== CEK KESEHATAN =====
 import CekStress from './pages/CekStress';
 import BMI from './pages/BMI';
 import TesDepresi from "./pages/TesDepresi";
 
-
-
 // ===== ADMIN =====
 import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import AdminArticles from './pages/admin/AdminArticles';
 import AdminArticleCreate from './pages/admin/AdminArticleCreate';
+import AdminArticleEdit from './pages/admin/AdminArticleEdit';
 import AdminDoctors from './pages/admin/AdminDoctors';
 import AdminDoctorCreate from './pages/admin/AdminDoctorCreate';
 import AdminDoctorEdit from './pages/admin/AdminDoctorEdit';
@@ -44,7 +43,6 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminTransaction from './pages/admin/AdminTransaction';
-import AdminArticleEdit from './pages/admin/AdminArticleEdit';
 
 export default function App() {
   return (
@@ -69,32 +67,16 @@ export default function App() {
         <Route path="/payment-receipt" element={<PaymentReceipt />} />
         <Route path="/profile" element={<Profile />} />
 
+        {/* ===== DOKTER ROUTES ===== */}
+        <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
 
         {/* ===== CEK KESEHATAN ===== */}
         <Route path="/cek-stress" element={<CekStress />} />
         <Route path="/bmi" element={<BMI />} />
         <Route path="/tes-depresi" element={<TesDepresi />} />
 
-
-
-
-
         {/* ===== ADMIN ROUTES ===== */}
         <Route path="/admin" element={<AdminLayout />}>
-
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="articles" element={<AdminArticles />} />
-          <Route path="articles/create" element={<AdminArticleCreate />} />
-          <Route path="doctors" element={<AdminDoctors />} />
-          <Route path="doctors/create" element={<AdminDoctorCreate />} />
-          <Route path="doctors/edit/:id" element={<AdminDoctorEdit />} />
-          <Route path="medicines" element={<AdminMedicines />} />
-          <Route path="medicines/create" element={<AdminMedicineCreate />} />
-          <Route path="medicines/edit/:id" element={<AdminMedicineEdit />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="bookings" element={<AdminBookings />} />
-          <Route path="orders" element={<AdminOrders />} />
-
             <Route path="dashboard" element={<Dashboard />} />
             
             {/* Module Articles */}
@@ -103,7 +85,7 @@ export default function App() {
             <Route path="articles/edit/:id" element={<AdminArticleEdit />} />
             
             {/* Module Doctors */}
-            <Route path="doctors" element={<AdminDoctors />} />       {/* 👈 2. TAMBAH ROUTE LIST DOKTER */}
+            <Route path="doctors" element={<AdminDoctors />} />
             <Route path="doctors/create" element={<AdminDoctorCreate />} />
             <Route path="doctors/edit/:id" element={<AdminDoctorEdit />} />
 
@@ -112,15 +94,11 @@ export default function App() {
             <Route path="medicines/create" element={<AdminMedicineCreate />} />
             <Route path="medicines/edit/:id" element={<AdminMedicineEdit />} />
 
-            {/* Module Users */}
+            {/* Module Users & Transactions */}
             <Route path="users" element={<AdminUsers />} />
             <Route path="bookings" element={<AdminBookings />} />
             <Route path="orders" element={<AdminOrders />} />
-
-            {/* Module Transactions */}
-            <Route path="transactions" element={<AdminTransaction />} />        
-            
-
+            <Route path="transactions" element={<AdminTransaction />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -70,6 +70,22 @@ export default function Profile() {
         }
     };
 
+    // --- LOGIC GAMBAR (SAMA DENGAN RECEIPT) ---
+    const getProfileImage = (path) => {
+        if (previewUrl) return previewUrl;
+        if (!path) return "https://cdn-icons-png.flaticon.com/512/3774/3774299.png";
+        
+        if (path.startsWith('http')) return path;
+        
+        let cleanPath = path.replace(/^public\//, '').replace(/^\//, '');
+        
+        if (cleanPath.startsWith('uploads/')) {
+             return `http://127.0.0.1:8000/${cleanPath}`;
+        }
+        
+        return `http://127.0.0.1:8000/storage/${cleanPath}`;
+    };
+
     const handleUpdate = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -132,21 +148,42 @@ export default function Profile() {
         navigate('/login');
     };
 
-    // 🔥 LOGIC NAVIGASI PINTAR (CHAT VS PROFIL)
+    // 🔥 LOGIC NAVIGASI PINTAR (CHAT KE USER_ID BUKAN TRX_ID)
     const handleTrxClick = (trx) => {
         const isMedicine = trx.type === 'medicine' || !trx.doctor_id;
         
-        if (isMedicine) return; // Obat gak bisa diklik (atau arahkan ke detail pesanan)
+        if (isMedicine) return; 
+
+        // Mencari target user_id dokter (ID Akun Dokter)
+        const targetDoctorUserId = 
+            trx.doctor?.user_id || 
+            trx.doctor?.user?.id || 
+            trx.doctor?.id || 
+            trx.doctor_id;
 
         const trxDate = new Date(trx.created_at);
         const now = new Date();
-        const diffInHours = (now - trxDate) / (1000 * 60 * 60); // Selisih jam
+        const diffInHours = (now - trxDate) / (1000 * 60 * 60);
 
         if (diffInHours < 24) {
-            // MASIH AKTIF -> KE CHAT
-            navigate(`/chat/${trx.id}`, { state: { doctor: trx.doctor, transaction: trx } });
+            if (!targetDoctorUserId) {
+                alert("Data dokter tidak ditemukan");
+                return;
+            }
+
+            navigate(`/chat/${targetDoctorUserId}`, { 
+                state: { 
+                    partner: {
+                        id: targetDoctorUserId,
+                        name: trx.doctor?.user?.name || trx.doctor?.name,
+                        image: trx.doctor?.image || trx.doctor?.user?.image,
+                        role: 'doctor'
+                    },
+                    transaction: trx
+                } 
+            });
         } else {
-            // KADALUARSA -> KE PROFIL DOKTER (BOOKING LAGI)
+            // KADALUARSA -> KE PROFIL DOKTER
             navigate(`/doctors/${trx.doctor_id}`);
         }
     };
@@ -166,12 +203,6 @@ export default function Profile() {
         return 'Obesitas';
     };
 
-    const getProfileImage = () => {
-        if (previewUrl) return previewUrl;
-        if (user?.image) return `http://127.0.0.1:8000/storage/${user.image}`;
-        return null;
-    };
-
     const preventMinus = (e) => {
         if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') e.preventDefault();
     };
@@ -187,39 +218,31 @@ export default function Profile() {
     const s = {
         page: { background: '#f8fafc', minHeight: '100vh', paddingTop: '100px', fontFamily: '"Inter", sans-serif', display: 'flex', flexDirection: 'column' },
         container: { maxWidth: '1100px', width: '100%', margin: '0 auto', padding: '0 20px', display: 'grid', gridTemplateColumns: '350px 1fr', gap: '30px', alignItems: 'start', flex: '1', marginBottom: '80px' },
-        
         cardProfile: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', position: 'sticky', top: '100px' },
         profileHeader: { background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)', height: '120px', position: 'relative' },
         avatarContainer: { width: '100px', height: '100px', background: 'white', borderRadius: '50%', padding: '4px', position: 'absolute', bottom: '-50px', left: '50%', transform: 'translateX(-50%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
-        avatar: { width: '100%', height: '100%', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '36px', fontWeight: 'bold', overflow: 'hidden', backgroundImage: getProfileImage() ? `url(${getProfileImage()})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' },
-        
+        avatar: { width: '100%', height: '100%', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '36px', fontWeight: 'bold', overflow: 'hidden', backgroundSize: 'cover', backgroundPosition: 'center' },
         profileBody: { padding: '60px 25px 30px', textAlign: 'center' },
         name: { fontSize: '22px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' },
         email: { fontSize: '14px', color: '#64748b', marginBottom: '20px' },
-
         statsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginTop: '20px', marginBottom: '25px' },
         statBox: { background: '#f8fafc', padding: '10px 5px', borderRadius: '12px', border: '1px solid #f1f5f9' },
         statVal: { fontSize: '16px', fontWeight: 'bold', color: '#0ea5e9', display:'block' },
         statLabel: { fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginTop: '4px' },
-
         formGroup: { textAlign: 'left', marginBottom: '15px' },
         label: { fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '6px', display: 'block' },
         inputWrapper: { display: 'flex', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0 12px', background: '#f8fafc', transition: '0.2s' },
         input: { width: '100%', padding: '12px 0', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', color: '#334155', fontWeight: '500' },
         icon: { color: '#94a3b8', marginRight: '10px' },
-
         btnPrimary: { width: '100%', padding: '12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(14, 165, 233, 0.3)' },
         btnSecondary: { width: '100%', padding: '12px', background: 'white', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '10px' },
         btnDanger: { width: '100%', padding: '12px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '15px' },
-
         sectionHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
         sectionTitle: { fontSize: '20px', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' },
-        
         trxCard: (clickable) => ({ 
             background: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '15px', 
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s',
             cursor: clickable ? 'pointer' : 'default', 
-            hover: clickable ? { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } : {}
         }),
         trxIcon: (type) => ({ width: '45px', height: '45px', borderRadius: '12px', background: type === 'medicine' ? '#dcfce7' : '#e0f2fe', color: type === 'medicine' ? '#16a34a' : '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '15px' }),
         badge: (status) => ({ background: status === 'success' ? '#dcfce7' : (status === 'pending' ? '#fff7ed' : '#fee2e2'), color: status === 'success' ? '#166534' : (status === 'pending' ? '#c2410c' : '#991b1b'), padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }),
@@ -230,16 +253,15 @@ export default function Profile() {
 
     return (
         <div style={s.page}>
-            {/* Animasi Pulse untuk Chat Aktif */}
-            <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }`}</style>
+            <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } } .hover-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #0ea5e9 !important; }`}</style>
             
             <Header />
             <div style={s.container}>
                 <div style={s.cardProfile}>
                     <div style={s.profileHeader}>
                         <div style={s.avatarContainer}>
-                            <div style={s.avatar}>
-                                {!getProfileImage() && user?.name?.charAt(0).toUpperCase()}
+                            <div style={{ ...s.avatar, backgroundImage: getProfileImage(user?.image) ? `url(${getProfileImage(user?.image)})` : 'none' }}>
+                                {!getProfileImage(user?.image) && user?.name?.charAt(0).toUpperCase()}
                             </div>
                             {isEditing && (
                                 <>
@@ -277,7 +299,7 @@ export default function Profile() {
                                 <div style={s.formGroup}><label style={s.label}>No Ponsel</label><div style={s.inputWrapper}><Phone size={16} style={s.icon}/><input style={s.input} value={editData.phone} onChange={e => setEditData({...editData, phone: e.target.value})} required /></div></div>
                                 <div style={{ background:'#f1f5f9', padding:'15px', borderRadius:'12px', marginTop:'20px', marginBottom:'20px' }}>
                                     <p style={{ fontSize:'12px', fontWeight:'bold', color:'#334155', marginBottom:'10px', display:'flex', alignItems:'center', gap:'6px' }}><Key size={14}/> Ganti Password (Opsional)</p>
-                                    <div style={{ marginBottom:'10px' }}><input type="password" placeholder="Password Lama (Wajib jika ganti)" style={{ ...s.input, background:'white', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1' }} value={editData.current_password} onChange={e => setEditData({...editData, current_password: e.target.value})} /></div>
+                                    <div style={{ marginBottom:'10px' }}><input type="password" placeholder="Password Lama" style={{ ...s.input, background:'white', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1' }} value={editData.current_password} onChange={e => setEditData({...editData, current_password: e.target.value})} /></div>
                                     <div><input type="password" placeholder="Password Baru" style={{ ...s.input, background:'white', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1' }} value={editData.password} onChange={e => setEditData({...editData, password: e.target.value})} /></div>
                                 </div>
                                 <button type="submit" style={s.btnPrimary} disabled={saving}>{saving ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> Simpan Perubahan</>}</button>
@@ -286,14 +308,12 @@ export default function Profile() {
                         )}
                     </div>
                 </div>
-                
-                {/* BAGIAN KANAN: RIWAYAT TRANSAKSI */}
+
                 <div>
                     <div style={s.sectionHeader}>
                         <h3 style={s.sectionTitle}><FileText size={24} color="#0ea5e9"/> Riwayat Transaksi</h3>
                     </div>
 
-                    {/* FILTER TOMBOL */}
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                         <button onClick={() => setFilterType('all')} style={s.filterBtn(filterType === 'all')}>Semua</button>
                         <button onClick={() => setFilterType('doctor')} style={s.filterBtn(filterType === 'doctor')}>Dokter</button>
@@ -305,7 +325,6 @@ export default function Profile() {
                             const isMedicine = trx.type === 'medicine' || !trx.doctor_id;
                             const isClickable = !isMedicine; 
 
-                            // Tentukan Judul & Subjudul
                             const title = isMedicine 
                                 ? 'Pembelian Obat' 
                                 : (trx.doctor?.user?.name || trx.doctor?.name || 'Konsultasi Dokter');
@@ -341,7 +360,6 @@ export default function Profile() {
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        {/* Logic Badge "Chat Aktif" */}
                                         {(() => {
                                             if (isMedicine) return <span style={s.badge(trx.status)}>{trx.status}</span>;
                                             

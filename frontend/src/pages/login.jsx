@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Smartphone, Lock, AlertCircle, ArrowLeft, LogIn } from 'lucide-react';
+import { Smartphone, Lock, ArrowLeft, LogIn } from 'lucide-react';
 
 export default function Login() {
   const [phone, setPhone] = useState('');
@@ -38,14 +38,17 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        // 1. Simpan Token
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('userInfo', JSON.stringify(data.user));
         
-        // Cek Role: Admin -> Dashboard, User -> Home
+        // 2. 🔥 LOGIKA REDIRECT BERDASARKAN ROLE
         if(data.user.role === 'admin') {
             navigate('/admin/dashboard');
+        } else if (data.user.role === 'doctor') {
+            navigate('/doctor/dashboard'); // 👈 DOKTER MASUK SINI
         } else {
-            navigate('/');
+            navigate('/'); // User biasa ke Home
         }
       } else {
         setMessage('❌ ' + (data.message || 'No HP atau Password Salah'));
@@ -80,7 +83,6 @@ export default function Login() {
     },
     
     logoArea: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' },
-    // 🔥 UPDATE: Logo Gambar (80px)
     logo: { width: '80px', marginBottom: '15px', objectFit: 'contain' },
     
     title: { fontSize: '22px', fontWeight: '800', color: '#1e293b' },
@@ -105,7 +107,8 @@ export default function Login() {
         
         {/* LOGO AREA */}
         <div style={s.logoArea}>
-            <img src="/images/logo.png" alt="HaloHealth" style={s.logo} />
+            {/* Pastikan path logo benar */}
+            <img src="/images/logo.png" alt="HaloHealth" style={s.logo} onError={(e) => e.target.style.display='none'} />
             <h2 style={s.title}>Selamat Datang</h2>
             <p style={s.subtitle}>Masuk untuk mulai konsultasi</p>
         </div>
