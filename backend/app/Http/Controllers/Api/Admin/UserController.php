@@ -60,7 +60,7 @@ class UserController extends Controller
     // 👁️ DETAIL USER
     public function show($id)
     {
-        $user = User::find($id);
+        $user = User::with('doctor')->find($id);
 
         if (!$user) {
             return response()->json(['message' => 'User tidak ditemukan'], 404);

@@ -8,8 +8,23 @@ export default function Header() {
   const [user, setUser] = useState(null);
 
   // Helper URL Gambar
-  const getProfileImage = (userData) => {
-      if (userData?.image) return `http://127.0.0.1:8000/storage/${userData.image}`;
+  const getImageUrl = (imagePath) => {
+      if (!imagePath) return null;
+
+      // Jika sudah URL lengkap
+      if (imagePath.startsWith("http")) return imagePath;
+
+      // Jika masih path lama storage
+      if (imagePath.startsWith("public/")) {
+          return `http://127.0.0.1:8000/storage/${imagePath.replace("public/", "")}`;
+      }
+
+      // Fallback aman (kalau backend kirim path relatif)
+      return `http://127.0.0.1:8000/${imagePath}`;
+  };
+
+  const getProfileImage = () => {
+      if (user?.image) return getImageUrl(user.image);
       return null;
   };
 

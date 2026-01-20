@@ -12,63 +12,48 @@ import foto3 from "../assets/foto4.png";
 import chatIcon from "../assets/icons/chat.png";
 import tokoIcon from "../assets/icons/toko.png";
 
-// ICONS LIB (Lucide React) - Updated
+// ICONS LIB (Lucide React)
 import { 
   Loader2, User, Calendar, ShieldCheck, 
-  BrainCircuit, Calculator, Frown // Tambahan Icon buat Cek Sehat
+  BrainCircuit, Calculator, Frown 
 } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
    
-  // STATE DATA
   const [medicines, setMedicines] = useState([]); 
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // STATE FILTER TAB
   const [activeTab, setActiveTab] = useState('Semua');
 
   const banners = [foto1, foto2, foto3];
 
-  // 1. FETCH DATA DARI API
   useEffect(() => {
     const fetchData = async () => {
         try {
-            // A. AMBIL OBAT
             const resMed = await fetch('http://127.0.0.1:8000/api/medicines');
             const dataMed = await resMed.json();
-            
             let finalMed = dataMed.data ? dataMed.data : (Array.isArray(dataMed) ? dataMed : []);
             finalMed = [...finalMed].sort(() => 0.5 - Math.random()); 
             setMedicines(finalMed); 
 
-            // B. AMBIL ARTIKEL
             const resArt = await fetch('http://127.0.0.1:8000/api/articles');
             const dataArt = await resArt.json();
-            
             let finalArt = dataArt.data ? dataArt.data : (Array.isArray(dataArt) ? dataArt : []);
             finalArt = [...finalArt].sort(() => 0.5 - Math.random()); 
-            
             setArticles(finalArt.slice(0, 3)); 
-
         } catch (error) {
             console.error("Gagal koneksi ke server:", error);
         } finally {
             setLoading(false);
         }
     };
-
     fetchData();
   }, []);
 
-  // 2. LOGIKA FILTERING OBAT
   const getFilteredMedicines = () => {
-    if (activeTab === 'Semua') {
-        return medicines.slice(0, 5); 
-    }
-
+    if (activeTab === 'Semua') return medicines.slice(0, 5); 
     const keywords = {
         'Obat Cair': ['cair', 'sirup', 'syrup', 'botol', 'liquid', 'suspensi'],
         'Tablet': ['tablet', 'kapsul', 'pill', 'kaplet', 'salut'],
@@ -78,53 +63,33 @@ export default function Home() {
         'P3K': ['p3k', 'perban', 'kasa', 'antiseptik', 'plester'],
         'Alat Kesehatan': ['alat', 'masker', 'termometer', 'oksigen']
     };
-
     const searchTerms = keywords[activeTab] || [activeTab.toLowerCase()];
-
     const filtered = medicines.filter(item => {
-        const itemText = [
-            item.name, 
-            item.type, 
-            item.category, 
-            item.description
-        ].join(' ').toLowerCase();
-
+        const itemText = [item.name, item.type, item.category, item.description].join(' ').toLowerCase();
         return searchTerms.some(term => itemText.includes(term));
     });
-
     return filtered.slice(0, 5); 
   };
 
-  // 3. FUNGSI HELPER GAMBAR
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "https://placehold.co/150x150?text=No+Image";
     if (imagePath.startsWith('http')) return imagePath;
     return `http://127.0.0.1:8000/${imagePath.replace(/^\//, '')}`;
   };
 
-  // 4. ADD TO CART
   const handleAddToCart = async (medicineId) => {
     const token = localStorage.getItem('token');
-    if (!token) {
-        alert("Silakan login dulu untuk belanja!");
-        navigate('/login');
-        return;
-    }
+    if (!token) { navigate('/login'); return; }
     try {
         const response = await fetch('http://127.0.0.1:8000/api/carts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ medicine_id: medicineId })
         });
-        if (response.ok) {
-            alert("Berhasil masuk keranjang! 🛒");
-        } else {
-            alert("Gagal menambahkan ke keranjang.");
-        }
+        if (response.ok) alert("Berhasil masuk keranjang! 🛒");
     } catch (error) { console.error(error); }
   };
 
-  // SLIDER BANNER
   useEffect(() => {
     const bannerInterval = setInterval(() => {
       setCurrentSlide((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
@@ -132,7 +97,6 @@ export default function Home() {
     return () => clearInterval(bannerInterval);
   }, [banners.length]);
 
-  // DATA STATIC
   const services = [
     { icon: chatIcon, title: "Chat dengan Dokter", subtitle: "Tanya dokter spesialis", link: "/doctors" },
     { icon: tokoIcon, title: "Toko Kesehatan", subtitle: "Cek obat & vitamin", link: "/medicines" },
@@ -140,10 +104,10 @@ export default function Home() {
 
   const medicineTabs = ['Semua', 'Obat Cair', 'Tablet', 'Vitamin', 'Ibu & Bayi', 'P3K', 'Alat Kesehatan', 'Herbal'];
 
-  // 🔥 DATA CEK KESEHATAN (SISA 3 ITEM & RAPI)
+  // 🔥 PERBAIKAN: Link BMI diubah ke /bmi
   const cekSehatTools = [
     { name: "Cek Stres", icon: <BrainCircuit size={32} color="#8b5cf6" />, link: "/cek-stress", bg: '#ede9fe' },
-    { name: "Kalkulator BMI", icon: <Calculator size={32} color="#0f172a" />, link: "/bmi-calculator", bg: '#f1f5f9' },
+    { name: "Kalkulator BMI", icon: <Calculator size={32} color="#0f172a" />, link: "/bmi", bg: '#f1f5f9' },
     { name: "Tes Depresi", icon: <Frown size={32} color="#ef4444" />, link: "/tes-depresi", bg: '#fee2e2' },
   ];
 
@@ -154,7 +118,6 @@ export default function Home() {
   ];
 
   const mainBlue = '#0ea5e9'; 
-  const sectionTitle = { fontSize: '20px', fontWeight: 'bold', color: '#1e293b', marginBottom: '20px' };
 
   return (
     <div style={{ background: '#fff', minHeight: '100vh', fontFamily: '"Inter", sans-serif', color: '#333', display: 'flex', flexDirection: 'column' }}>
@@ -190,7 +153,7 @@ export default function Home() {
 
         {/* 2. SOLUSI KESEHATAN */}
         <section style={{ marginBottom: '50px' }}>
-            <h3 style={sectionTitle}>Solusi Kesehatan</h3>
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', marginBottom: '20px' }}>Solusi Kesehatan</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
                 {services.map((item, i) => (
                     <div key={i} onClick={() => item.link !== '#' && navigate(item.link)} 
@@ -248,29 +211,18 @@ export default function Home() {
                         getFilteredMedicines().map((prod) => (
                             <div key={prod.id} className="interactive-card" style={{ borderRadius: '12px', padding: '15px', background:'white', border:'1px solid #e2e8f0', display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
                                 <div style={{ height: '120px', display:'flex', justifyContent:'center', marginBottom:'10px', overflow:'hidden' }}>
-                                    <img 
-                                        src={getImageUrl(prod.image)} 
-                                        style={{ height: '100%', objectFit: 'contain' }} 
-                                        alt={prod.name}
-                                        onError={(e) => e.target.src = "https://placehold.co/150x150?text=No+Image"}
-                                    />
+                                    <img src={getImageUrl(prod.image)} style={{ height: '100%', objectFit: 'contain' }} alt={prod.name} onError={(e) => e.target.src = "https://placehold.co/150x150?text=No+Image"} />
                                 </div>
                                 <div>
                                     <h4 style={{ margin: '0 0 5px', fontSize: '14px', fontWeight: 'bold', height:'40px', overflow:'hidden', lineHeight:'1.4' }}>{prod.name}</h4>
                                     <p style={{ color: mainBlue, fontWeight: 'bold', fontSize: '14px' }}>Rp {prod.price?.toLocaleString('id-ID')}</p>
-                                    <button 
-                                        onClick={() => handleAddToCart(prod.id)}
-                                        style={{ width: '100%', marginTop:'10px', padding: '8px', background: activeTab === 'Obat Cair' ? mainBlue : mainBlue, border: 'none', color: 'white', borderRadius: '8px', fontSize:'12px', fontWeight:'bold', cursor:'pointer', boxShadow: '0 4px 6px rgba(14, 165, 233, 0.2)' }}
-                                    >
-                                        + Keranjang
-                                    </button>
+                                    <button onClick={() => handleAddToCart(prod.id)} style={{ width: '100%', marginTop:'10px', padding: '8px', background: mainBlue, border: 'none', color: 'white', borderRadius: '8px', fontSize:'12px', fontWeight:'bold', cursor:'pointer', boxShadow: '0 4px 6px rgba(14, 165, 233, 0.2)' }}> + Keranjang </button>
                                 </div>
                             </div>
                         ))
                     ) : (
                         <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#f8fafc', borderRadius: '12px', color: '#94a3b8' }}>
                             <p>Tidak ada produk kategori <strong>"{activeTab}"</strong></p>
-                            <button onClick={() => setActiveTab('Semua')} style={{marginTop:'10px', color: mainBlue, cursor:'pointer', border:'none', background:'none', textDecoration:'underline'}}>Tampilkan Semua</button>
                         </div>
                     )}
                 </div>
@@ -289,27 +241,17 @@ export default function Home() {
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px' }}>
                     {articles.map((art) => (
-                        <div key={art.id} onClick={() => navigate(`/article/${art.id}`)} className="article-card interactive-card" style={{ borderRadius:'12px', overflow:'hidden', border:'1px solid #e2e8f0', cursor:'pointer', background: 'white', display:'flex', flexDirection:'column' }}>
-                            <img 
-                                src={getImageUrl(art.thumbnail || art.image)} 
-                                style={{ width: '100%', height: '180px', objectFit: 'cover' }} 
-                                alt="article"
-                                onError={(e) => e.target.src = "https://placehold.co/150x150?text=Artikel"}
-                            />
+                        // 🔥 PERBAIKAN: navigate ke /articles/${art.id} (Pake S)
+                        <div key={art.id} onClick={() => navigate(`/articles/${art.id}`)} className="article-card interactive-card" style={{ borderRadius:'12px', overflow:'hidden', border:'1px solid #e2e8f0', cursor:'pointer', background: 'white', display:'flex', flexDirection:'column' }}>
+                            <img src={getImageUrl(art.thumbnail || art.image)} style={{ width: '100%', height: '180px', objectFit: 'cover' }} alt="article" onError={(e) => e.target.src = "https://placehold.co/150x150?text=Artikel"} />
                             <div style={{ padding:'20px', flex: 1, display:'flex', flexDirection:'column' }}>
                                 <div style={{ marginBottom: '10px' }}>
-                                    <span style={{ fontSize: '11px', background: '#e0f2fe', color: mainBlue, padding: '4px 10px', borderRadius: '4px', fontWeight:'bold', textTransform: 'uppercase' }}>
-                                        {art.category || 'Umum'}
-                                    </span>
+                                    <span style={{ fontSize: '11px', background: '#e0f2fe', color: mainBlue, padding: '4px 10px', borderRadius: '4px', fontWeight:'bold', textTransform: 'uppercase' }}>{art.category || 'Umum'}</span>
                                 </div>
-                                <h4 className="article-title" style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: 'bold', lineHeight: '1.4', color:'#333', flex:1 }}>
-                                    {art.title}
-                                </h4>
+                                <h4 className="article-title" style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: 'bold', lineHeight: '1.4', color:'#333', flex:1 }}>{art.title}</h4>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent:'space-between', fontSize: '12px', color: '#94a3b8', marginTop:'auto' }}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><User size={12} /> {art.author || 'Admin'}</span>
-                                    {art.published_at && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Calendar size={12} /> {new Date(art.published_at).toLocaleDateString('id-ID')}</span>
-                                    )}
+                                    {art.published_at && <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Calendar size={12} /> {new Date(art.published_at).toLocaleDateString('id-ID')}</span>}
                                 </div>
                             </div>
                         </div>
@@ -318,62 +260,29 @@ export default function Home() {
             )}
         </section>
 
-        {/* 6. CEK KESEHATAN (Layout Baru - Center & 3 Item) */}
+        {/* 6. CEK KESEHATAN */}
         <section style={{ marginBottom: '60px' }}>
-          <h3 style={sectionTitle}>Cek Kesehatan Mandiri</h3>
-
-          {/* Menggunakan Flex + Center agar 3 item ada di tengah */}
+          <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', marginBottom: '20px' }}>Cek Kesehatan Mandiri</h3>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
             {cekSehatTools.map((tool, i) => (
-              <div
-                key={i}
-                className="interactive-card"
-                onClick={() => {
-                    if (tool.link === '#') {
-                        alert("Fitur segera hadir!");
-                    } else {
-                        navigate(tool.link);
-                    }
-                }}
-                style={{
-                  width: '200px',
-                  background: 'white',
-                  borderRadius: '16px',
-                  padding: '30px 20px',
-                  textAlign: 'center',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
-                  cursor: 'pointer'
-                }}
+              <div key={i} className="interactive-card" onClick={() => navigate(tool.link)}
+                style={{ width: '200px', background: 'white', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
               >
-                <div
-                  style={{
-                    width: '60px', height: '60px',
-                    background: tool.bg,
-                    borderRadius: '50%',
-                    margin: '0 auto 15px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}
-                >
-                  {/* Icon langsung dari React Component */}
+                <div style={{ width: '60px', height: '60px', background: tool.bg, borderRadius: '50%', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {tool.icon}
                 </div>
-
-                <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', marginBottom: '5px' }}>
-                    {tool.name}
-                </h4>
+                <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', marginBottom: '5px' }}>{tool.name}</h4>
                 <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Cek Sekarang</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* 7. TESTIMONI (STATIS) */}
         <section style={{ marginBottom: '80px' }}>
-             <h3 style={sectionTitle}>Kata Mereka</h3>
+             <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', marginBottom: '20px' }}>Kata Mereka</h3>
              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px' }}>
                 {testimonials.map((testi, i) => (
-                    <div key={i} className="interactive-card" style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #f1f5f9', cursor:'default' }}>
+                    <div key={i} style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                         <div style={{ color: '#fbbf24', marginBottom: '10px', fontSize:'14px' }}>⭐⭐⭐⭐⭐</div>
                         <p style={{ fontSize: '14px', lineHeight: '1.6', fontStyle: 'italic', marginBottom: '15px', color:'#555' }}>"{testi.text}"</p>
                         <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
@@ -387,7 +296,6 @@ export default function Home() {
                 ))}
              </div>
         </section>
-
       </div>
       <Footer />
     </div>

@@ -54,7 +54,7 @@ export default function Cart() {
     try {
         // Optimistic UI Update (Update tampilan dulu biar cepet)
         setCartItems(items => items.map(item => item.id === cartId ? { ...item, quantity: newQty } : item));
-        
+
         await fetch(`http://127.0.0.1:8000/api/carts/${cartId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

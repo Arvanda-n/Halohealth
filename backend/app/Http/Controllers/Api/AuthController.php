@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
@@ -142,27 +143,33 @@ class AuthController extends Controller
             if ($user->image && \Illuminate\Support\Facades\Storage::exists('public/' . $user->image)) {
                 \Illuminate\Support\Facades\Storage::delete('public/' . $user->image);
             }
-            $path = $request->file('image')->store('profiles', 'public');
+            $path = $request->file('image')->store('doctors', 'public');
             $user->image = $path;
         }
 
         // 4. 🔥 LOGIC UPLOAD FOTO (VERSI KEBAL ERROR)
         if ($request->hasFile('image')) {
-            // Cek kalau user punya foto lama
-            if ($user->image) {
-                try {
-                    // Coba hapus file lama dari disk 'public'
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($user->image);
-                } catch (\Exception $e) {
-                    // Kalau gagal hapus (misal file gak ada), BIARKAN SAJA.
-                    // Jangan bikin aplikasi crash. Lanjut upload yang baru.
-                }
-            }
-            
-            // Simpan foto baru
-            $path = $request->file('image')->store('profiles', 'public');
-            $user->image = $path;
+
+    // Hapus foto lama jika ada
+    if ($user->image) {
+        $oldFilename = basename($user->image);
+        $oldPath = public_path('uploads/doctors/' . $oldFilename);
+
+        if (File::exists($oldPath)) {
+            File::delete($oldPath);
         }
+    }
+
+    // Simpan foto baru
+    $image = $request->file('image');
+    $filename = time() . '_' . $image->hashName();
+
+    // Simpan ke public/uploads/profiles
+    $image->move(public_path('uploads/doctors'), $filename);
+
+    // Simpan URL lengkap ke database
+    $user->image = url('uploads/doctors/' . $filename);
+}
 
         $user->save();
 

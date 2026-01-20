@@ -166,11 +166,27 @@ export default function Profile() {
         return 'Obesitas';
     };
 
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return null;
+
+        // Jika sudah URL lengkap
+        if (imagePath.startsWith("http")) return imagePath;
+
+        // Jika masih path lama storage
+        if (imagePath.startsWith("public/")) {
+            return `http://127.0.0.1:8000/storage/${imagePath.replace("public/", "")}`;
+        }
+
+        // Fallback aman (kalau backend kirim path relatif)
+        return `http://127.0.0.1:8000/${imagePath}`;
+    };
+
     const getProfileImage = () => {
         if (previewUrl) return previewUrl;
-        if (user?.image) return `http://127.0.0.1:8000/storage/${user.image}`;
+        if (user?.image) return getImageUrl(user.image);
         return null;
     };
+
 
     const preventMinus = (e) => {
         if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') e.preventDefault();

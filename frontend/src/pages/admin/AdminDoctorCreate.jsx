@@ -6,28 +6,15 @@ export default function AdminDoctorCreate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
-  // 🔥 DATA MANUAL: SAMA PERSIS DENGAN PUBLIC 🔥
-  // Kita simpan nama lengkapnya biar bagus saat ditampilkan
   const SPECIALIZATIONS = [
-      'Dokter Umum', 
-      'Spesialis Anak', 
-      'Spesialis Kulit', 
-      'Penyakit Dalam', 
-      'Kandungan', 
-      'Spesialis THT', 
-      'Kesehatan Jiwa', 
-      'Dokter Gigi', 
-      'Dokter Hewan', 
-      'Spesialis Mata', 
-      'Spesialis Jantung'
+      'Dokter Umum', 'Spesialis Anak', 'Spesialis Kulit', 'Penyakit Dalam', 
+      'Kandungan', 'Spesialis THT', 'Kesehatan Jiwa', 'Dokter Gigi', 
+      'Dokter Hewan', 'Spesialis Mata', 'Spesialis Jantung'
   ];
 
   const [formData, setFormData] = useState({
-    name: '', 
-    email: '', 
-    phone: '', 
-    password: '',
-    specialization: 'Dokter Umum', // Default
+    name: '', email: '', phone: '', password: '',
+    specialization: 'Dokter Umum',
     experience_years: '', 
     consultation_fee: '',
   });
@@ -51,14 +38,30 @@ export default function AdminDoctorCreate() {
     e.preventDefault();
     setLoading(true);
 
+    const token = localStorage.getItem('token'); 
     const data = new FormData();
-    Object.keys(formData).forEach(key => data.append(key, formData[key]));
-    if (photo) data.append('photo', photo);
+    
+    data.append('name', formData.name);
+    data.append('email', formData.email);
+    data.append('phone', formData.phone);
+    data.append('password', formData.password);
+    data.append('specialization', formData.specialization);
+    
+    // 🔥 REVISI: Kirim HANYA ANGKA murni agar tidak error "Data Truncated"
+    data.append('experience', formData.experience_years); 
+    data.append('price', formData.consultation_fee);
+    
+    if (photo) {
+        data.append('image', photo); 
+    }
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/doctors', {
+        const response = await fetch('http://127.0.0.1:8000/api/admin/doctors', {
             method: 'POST',
-            headers: { 'Accept': 'application/json' },
+            headers: { 
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
             body: data,
         });
 
@@ -67,9 +70,10 @@ export default function AdminDoctorCreate() {
             navigate('/admin/doctors');
         } else {
             const result = await response.json();
-            alert('Gagal: ' + (result.message || 'Cek data input.'));
+            alert('Gagal: ' + (result.message || 'Cek data input (Pastikan angka untuk pengalaman & biaya)'));
         }
     } catch (error) {
+        console.error("Error submit:", error);
         alert('Terjadi kesalahan sistem');
     } finally {
         setLoading(false);
@@ -77,14 +81,14 @@ export default function AdminDoctorCreate() {
   };
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', fontFamily: 'Inter, sans-serif' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'15px', marginBottom:'30px' }}>
             <Link to="/admin/doctors" style={{ background:'white', padding:'10px', borderRadius:'50%', color:'#64748b', boxShadow:'0 2px 5px rgba(0,0,0,0.05)' }}>
                 <ArrowLeft size={20} />
             </Link>
             <div>
                 <h1 style={{ fontSize:'24px', fontWeight:'bold', color:'#1e293b' }}>Tambah Dokter Baru</h1>
-                <p style={{ color:'#64748b' }}>Buat akun login & profil dokter sekaligus.</p>
+                <p style={{ color:'#64748b' }}>Input pengalaman & biaya dengan angka saja.</p>
             </div>
         </div>
 
@@ -120,7 +124,7 @@ export default function AdminDoctorCreate() {
                 </div>
 
                 <div style={{ marginBottom:'15px' }}>
-                    <label style={{ display:'block', marginBottom:'8px', fontWeight:'600', color:'#334155' }}>Password</label>
+                    <label style={{ display:'block', marginBottom:'8px', fontWeight:'600', color:'#334155' }}>Password Akun</label>
                     <input type="password" name="password" required placeholder="Minimal 6 karakter"
                         value={formData.password} onChange={handleChange}
                         style={{ width:'100%', padding:'12px', borderRadius:'8px', border:'1px solid #e2e8f0' }}
@@ -145,15 +149,15 @@ export default function AdminDoctorCreate() {
 
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px' }}>
                     <div>
-                        <label style={{ display:'block', marginBottom:'8px', fontWeight:'600', color:'#334155' }}>Pengalaman (Tahun)</label>
-                        <input type="number" name="experience_years" required placeholder="5" min="0"
+                        <label style={{ display:'block', marginBottom:'8px', fontWeight:'600', color:'#334155' }}>Pengalaman (Angka Tahun)</label>
+                        <input type="number" name="experience_years" required placeholder="Contoh: 5" min="0"
                             value={formData.experience_years} onChange={handleChange}
                             style={{ width:'100%', padding:'12px', borderRadius:'8px', border:'1px solid #e2e8f0' }}
                         />
                     </div>
                     <div>
-                        <label style={{ display:'block', marginBottom:'8px', fontWeight:'600', color:'#334155' }}>Biaya Konsultasi</label>
-                        <input type="number" name="consultation_fee" required placeholder="50000" min="0"
+                        <label style={{ display:'block', marginBottom:'8px', fontWeight:'600', color:'#334155' }}>Biaya Konsultasi (Angka Rp)</label>
+                        <input type="number" name="consultation_fee" required placeholder="Contoh: 150000" min="0"
                             value={formData.consultation_fee} onChange={handleChange}
                             style={{ width:'100%', padding:'12px', borderRadius:'8px', border:'1px solid #e2e8f0' }}
                         />
@@ -163,13 +167,13 @@ export default function AdminDoctorCreate() {
 
             <div style={{ display:'flex', flexDirection:'column', gap:'20px' }}>
                 <div style={{ background:'white', padding:'20px', borderRadius:'16px', boxShadow:'0 4px 20px rgba(0,0,0,0.05)', textAlign:'center' }}>
-                    <label style={{ display:'block', marginBottom:'15px', fontWeight:'600', color:'#334155' }}>Foto Profil</label>
+                    <label style={{ display:'block', marginBottom:'15px', fontWeight:'600', color:'#334155' }}>Foto Profil Dokter</label>
                     <div style={{ position:'relative', width:'150px', height:'150px', margin:'0 auto', borderRadius:'50%', overflow:'hidden', border:'4px solid #f1f5f9', background:'#f8fafc' }}>
                         {preview ? <img src={preview} alt="Preview" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <div style={{ width:'100%', height:'100%', display:'flex', justifyContent:'center', alignItems:'center', color:'#cbd5e1' }}><User size={60} /></div>}
                         <input type="file" accept="image/*" onChange={handleFileChange} style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', opacity:0, cursor:'pointer' }} />
                     </div>
                 </div>
-                <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px', background:'#0ea5e9', color:'white', border:'none', borderRadius:'10px', fontSize:'16px', fontWeight:'bold', cursor: loading ? 'not-allowed' : 'pointer', display:'flex', justifyContent:'center', alignItems:'center', gap:'10px', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)' }}>
+                <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px', background:'#0ea5e9', color:'white', border:'none', borderRadius:'10px', fontSize:'16px', fontWeight:'bold', cursor: loading ? 'not-allowed' : 'pointer', display:'flex', justifyContent:'center', alignItems:'center', gap:'10px' }}>
                     {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />} {loading ? 'Menyimpan...' : 'Simpan Dokter'}
                 </button>
             </div>
