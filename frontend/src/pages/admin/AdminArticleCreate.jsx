@@ -12,7 +12,7 @@ export default function AdminArticleCreate() {
     category: 'Tips Sehat', // Default value
     content: '',
     author: 'Admin HaloHealth', // Hardcode dulu atau ambil dari user login
-  });
+  });   
   
   const [thumbnail, setThumbnail] = useState(null); // File mentah
   const [preview, setPreview] = useState(null);     // URL Preview gambar
